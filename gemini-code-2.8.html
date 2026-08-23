@@ -1,0 +1,2647 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Wünderkraf Paperware - Master Factory ERP v2.8</title>
+    <meta name="theme-color" content="#1a365d">
+    <!-- PWA App Manifest with Dynamic Brand Support -->
+    <link rel="manifest" href="data:application/manifest+json;charset=utf-8,%7B%22name%22%3A%22W%C3%BCnderkraf%20ERP%22%2C%22short_name%22%3A%22W%C3%BCnderkraf%22%2C%22start_url%22%3A%22.%22%2C%22display%22%3A%22standalone%22%2C%22background_color%22%3A%22%231a365d%22%2C%22theme_color%22%3A%22%231a365d%22%2C%22icons%22%3A%5B%7B%22src%22%3A%22https%3A%2F%2Fvia.placeholder.com%2F192x192%2F1a365d%2Fffffff%3Ftext%3DWK%22%2C%22sizes%22%3A%22192x192%22%2C%22type%22%3A%22image%2Fpng%22%7D%5D%7D">
+    <style>
+        * { box-sizing: border-box; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
+        body { background: #f4f6f9; margin: 0; padding: 15px; color: #2d3748; }
+        .hidden { display: none !important; }
+        
+        .header { display: flex; align-items: center; justify-content: space-between; background: #1a365d; color: white; padding: 10px 20px; border-radius: 8px; margin-bottom: 15px; }
+        .brand { display: flex; align-items: center; gap: 12px; }
+        .brand-logo-container { width: 50px; height: 50px; border-radius: 8px; background: #ffffff; padding: 3px; display: flex; align-items: center; justify-content: center; box-shadow: 0 2px 5px rgba(0,0,0,0.15); overflow: hidden; }
+        .brand-logo-img { width: 100%; height: 100%; object-fit: contain; }
+        .brand-logo-fallback { font-size: 18px; font-weight: bold; color: #1a365d; }
+        .brand-title h2 { margin: 0; font-size: 18px; }
+        .brand-title p { margin: 0; font-size: 11px; color: #cbd5e0; }
+        
+        .login-card { max-width: 380px; margin: 40px auto; background: #fff; padding: 25px; border-radius: 10px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); text-align: center; }
+        .login-logo { width: 100px; height: 100px; margin: 0 auto 12px auto; background: #fff; border-radius: 10px; padding: 5px; box-shadow: 0 2px 8px rgba(0,0,0,0.08); display: flex; align-items: center; justify-content: center; overflow: hidden; }
+        .login-logo img { width: 100%; height: 100%; object-fit: contain; }
+        
+        .layout { display: grid; grid-template-columns: 1fr; gap: 15px; }
+        @media(min-width: 900px) { .layout { grid-template-columns: 400px 1fr; } }
+        
+        .card { background: #fff; padding: 15px; border-radius: 8px; box-shadow: 0 1px 3px rgba(0,0,0,0.08); margin-bottom: 15px; border: 1px solid #e2e8f0; }
+        .card h3 { margin-top: 0; font-size: 13px; text-transform: uppercase; color: #2b6cb0; border-bottom: 2px solid #edf2f7; padding-bottom: 6px; }
+        
+        input, select, button, textarea { width: 100%; padding: 8px; margin-top: 4px; margin-bottom: 8px; border: 1px solid #cbd5e0; border-radius: 5px; font-size: 12px; text-transform: uppercase; }
+        input[type="password"], input[type="date"], input[type="time"], input[type="file"], textarea { text-transform: none; }
+        textarea { font-family: monospace; font-size: 11px; resize: vertical; }
+
+        button { background: #3182ce; color: white; font-weight: bold; border: none; cursor: pointer; transition: 0.2s; border-radius: 4px; }
+        button:hover { background: #2b6cb0; }
+        button.btn-excel { background: #2f855a; }
+        button.btn-done { background: #38a169; }
+        button.btn-hold { background: #dd6b20; }
+        button.btn-wa { background: #25D366; color: white; }
+        button.btn-gdrive { background: #4285F4; color: white; }
+        button.btn-logout { background: #e53e3e; width: auto; padding: 4px 8px; font-size: 11px; margin: 0; }
+        button.btn-chg-pass { background: #4a5568; width: auto; padding: 4px 8px; font-size: 11px; margin: 0 4px; }
+        
+        .dash-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 10px; }
+        .machine-card { background: #fff; border-top: 4px solid #3182ce; border-radius: 6px; padding: 10px; border: 1px solid #e2e8f0; cursor: pointer; transition: transform 0.1s, box-shadow 0.1s; }
+        .machine-card:hover { transform: translateY(-2px); box-shadow: 0 4px 10px rgba(0,0,0,0.08); }
+        .machine-card.idle { border-top-color: #cbd5e0; opacity: 0.8; }
+        .machine-card.held { border-top-color: #dd6b20; background: #fffaf0; }
+        .machine-card.qc-card { border-top-color: #805ad5; }
+        .machine-card.pack-card { border-top-color: #dd6b20; }
+
+        .summary-table, .history-table { width: 100%; border-collapse: collapse; font-size: 11px; margin-top: 5px; }
+        .summary-table th, .summary-table td, .history-table th, .history-table td { border: 1px solid #cbd5e0; padding: 6px; text-align: center; }
+        .summary-table th, .history-table th { background: #edf2f7; color: #2d3748; }
+        
+        .clickable-cell { cursor: pointer; transition: 0.2s; font-weight: bold; text-decoration: underline; color: #2b6cb0; }
+        .clickable-cell:hover { background-color: #bee3f8 !important; }
+
+        .modal { display: none; position: fixed; z-index: 1000; left: 0; top: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); }
+        .modal-content { background: white; margin: 3% auto; padding: 20px; width: 92%; max-width: 820px; border-radius: 8px; box-shadow: 0 4px 20px rgba(0,0,0,0.2); }
+        .close-btn { float: right; font-size: 20px; font-weight: bold; cursor: pointer; color: #e53e3e; }
+        
+        .kit-box { background: #fffaf0; border: 1px dashed #dd6b20; padding: 8px; border-radius: 5px; margin-bottom: 8px; text-align: left; }
+        .kit-checkboxes { display: grid; grid-template-columns: 1fr 1fr; gap: 4px; font-size: 11px; margin: 5px 0; }
+        .kit-checkboxes label { display: flex; align-items: center; gap: 4px; font-weight: bold; cursor: pointer; }
+        .kit-checkboxes input[type="checkbox"] { width: auto; margin: 0; }
+        
+        .perm-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; background: #fff; padding: 8px; border: 1px solid #cbd5e0; border-radius: 4px; margin: 6px 0; }
+        .perm-grid label { display: flex; align-items: center; gap: 5px; font-size: 10px; font-weight: bold; cursor: pointer; }
+        .perm-grid input[type="checkbox"] { width: auto; margin: 0; }
+
+        .info-box { background: #ebf8ff; border-left: 4px solid #3182ce; padding: 6px; margin: 5px 0; font-size: 11px; text-align: left; }
+        .auto-kit-tag { background: #c6f6d5; color: #22543d; font-weight: bold; padding: 4px; text-align: center; border-radius: 4px; margin-top: 5px; font-size: 11px; }
+
+        .chart-bar-container { background: #e2e8f0; height: 18px; border-radius: 9px; overflow: hidden; margin: 4px 0 8px 0; display: flex; }
+        .chart-bar-fill { background: #3182ce; height: 100%; color: white; font-size: 9px; line-height: 18px; text-align: center; font-weight: bold; transition: width 0.3s; }
+        
+        .crate-issue-box { background: #e2e8f0; border-left: 3px solid #2b6cb0; padding: 6px; border-radius: 4px; margin-top: 6px; text-align: left; }
+        .crate-issue-box h5 { margin: 0 0 4px 0; font-size: 10px; color: #1a365d; text-transform: uppercase; }
+
+        .analytics-grid { display: grid; grid-template-columns: 1fr; gap: 8px; margin-top: 8px; }
+        @media(min-width: 600px) { .analytics-grid { grid-template-columns: repeat(auto-fit, minmax(115px, 1fr)); } }
+        .analytics-card { background: #f7fafc; border: 1px solid #cbd5e0; border-radius: 6px; padding: 8px; text-align: center; }
+        .analytics-card h5 { margin: 0; font-size: 10px; color: #4a5568; }
+        .analytics-card .val { font-size: 13px; font-weight: bold; margin-top: 2px; }
+
+        @media print {
+            body * { visibility: hidden; }
+            #challanPrintArea, #challanPrintArea * { visibility: visible; }
+            #challanPrintArea { position: absolute; left: 0; top: 0; width: 100%; }
+        }
+    </style>
+</head>
+<body>
+
+    <div class="header">
+        <div class="brand">
+            <div class="brand-logo-container" id="headerLogoContainer">
+                <span class="brand-logo-fallback" id="headerLogoFallback">WK</span>
+                <img id="headerLogoImg" class="brand-logo-img hidden" alt="Brand Logo">
+            </div>
+            <div class="brand-title">
+                <h2>Wünderkraf Paperware</h2>
+                <p>Factory ERP & Master Production Suite (v2.8)</p>
+            </div>
+        </div>
+        <div id="userInfo" class="hidden" style="text-align: right; display: flex; align-items: center;">
+            <span id="displayRole" style="font-size:11px; font-weight:bold; background:#3182ce; padding:3px 8px; border-radius:4px;">User</span>
+            <button class="btn-chg-pass" onclick="openSelfPasswordModal()">🔑 Change Password</button>
+            <button class="btn-logout" onclick="logout()">Logout</button>
+        </div>
+    </div>
+
+    <!-- Login Station -->
+    <div id="loginSection" class="login-card">
+        <div class="login-logo" id="loginLogoContainer">
+            <span style="font-size:32px; font-weight:bold; color:#1a365d;" id="loginLogoFallback">WK</span>
+            <img id="loginLogoImg" class="hidden" alt="Brand Logo">
+        </div>
+        <h2 style="text-align:center; color:#1a365d; margin-top:0;">System Login</h2>
+        <label style="font-size: 11px; font-weight: bold; display:block; text-align:left;">Select User Account:</label>
+        <select id="userRoleSelect" onchange="clearPasswordBox()"></select>
+
+        <label style="font-size: 11px; font-weight: bold; display:block; text-align:left;">Enter Private Password:</label>
+        <input type="password" id="password" placeholder="Enter Password">
+        
+        <button onclick="login()">Login Workstation</button>
+        <p id="loginError" style="color:red; font-size:11px; text-align:center;" class="hidden">Invalid Password!</p>
+    </div>
+
+    <!-- Main Workspace -->
+    <div id="appSection" class="hidden">
+        <div class="layout">
+            
+            <!-- LEFT SIDEBAR PANELS -->
+            <div class="sidebar">
+
+                <!-- 1. Marketing Team Panel -->
+                <div class="card hidden" id="secMarketing">
+                    <h3>📝 Marketing - Customer Packing Order</h3>
+                    <div class="kit-box">
+                        <label style="font-size: 9px;">Customer / Brand Name:</label>
+                        <input type="text" id="mktCustName" placeholder="e.g. AIR INDIA">
+
+                        <label style="font-size: 9px;">Select Packing Type:</label>
+                        <select id="mktPackingType" onchange="toggleMktPackType()">
+                            <option value="KIT">COMBO KIT PACKING</option>
+                            <option value="INDIVIDUAL">INDIVIDUAL SINGLE ITEM PACKING</option>
+                        </select>
+
+                        <div id="mktIndividualSection" class="hidden" style="margin-top:4px;">
+                            <label style="font-size: 9px; color:#2b6cb0; font-weight:bold;">Select Single Item:</label>
+                            <select id="mktSingleItemSelect" onchange="autoUpdateMktKitName()"></select>
+                        </div>
+
+                        <div id="mktKitSection">
+                            <span style="font-size:10px; font-weight:bold; color:#2b6cb0; display:block; margin-top:6px;">Select Kit Items:</span>
+                            <div class="kit-checkboxes">
+                                <label><input type="checkbox" class="mkt-kit-item" value="Tissue" onchange="autoUpdateMktKitName()"> Tissue</label>
+                                <label><input type="checkbox" class="mkt-kit-item" value="Spoon" onchange="autoUpdateMktKitName()"> Spoon</label>
+                                <label><input type="checkbox" class="mkt-kit-item" value="Fork" onchange="autoUpdateMktKitName()"> Fork</label>
+                                <label><input type="checkbox" class="mkt-kit-item" value="Knife" onchange="autoUpdateMktKitName()"> Knife</label>
+                                <label><input type="checkbox" class="mkt-kit-item" value="Dessert Spoon" onchange="autoUpdateMktKitName()"> Dessert Spoon</label>
+                            </div>
+                        </div>
+
+                        <div id="mktKitBadge" class="auto-kit-tag">NO ITEMS SELECTED</div>
+
+                        <label style="font-size: 9px; margin-top:6px;">Total Order Qty (Pieces):</label>
+                        <input type="number" id="mktOrderQty" placeholder="e.g. 50000">
+
+                        <label style="font-size: 9px;">Pieces Per Box (Box Capacity):</label>
+                        <input type="number" id="mktPcsPerBox" placeholder="e.g. 1000">
+
+                        <label style="font-size: 9px;">Dispatch Target Date:</label>
+                        <input type="date" id="mktDispatchDate">
+
+                        <div style="background:#edf2f7; padding:6px; border-radius:4px; margin-top:6px; font-size:10px;">
+                            <b>📦 Box Packaging Requirements:</b>
+                            <div style="display:grid; grid-template-columns: 1fr 1fr; gap:5px; margin-top:4px;">
+                                <div>
+                                    <label style="font-size:9px;">Box Wrapping:</label>
+                                    <select id="mktWrappingReq">
+                                        <option value="YES">YES (Wrap Box)</option>
+                                        <option value="NO">NO (Plain Box)</option>
+                                    </select>
+                                </div>
+                                <div>
+                                    <label style="font-size:9px;">Label Placement:</label>
+                                    <select id="mktLabelReq">
+                                        <option value="YES">YES (Stick Label)</option>
+                                        <option value="NO">NO (No Label)</option>
+                                    </select>
+                                </div>
+                            </div>
+                            <label style="font-size:9px; margin-top:4px; display:block;">Special Packaging Remarks / Notes:</label>
+                            <input type="text" id="mktRemarks" placeholder="e.g. Double taping required / Air India sticker" style="font-size:10px; margin-bottom:2px;">
+                        </div>
+
+                        <button onclick="submitMarketingOrder()" style="background:#2f855a; margin-top:8px;">Submit Order To Factory</button>
+                    </div>
+                </div>
+
+                <!-- 2. Multi-Item Dispatch Desk -->
+                <div class="card hidden" id="secDispatch">
+                    <h3>🚚 Multi-Item Dispatch & Invoicing</h3>
+                    <div style="background:#f0fff4; border:1px solid #c6f6d5; padding:8px; border-radius:5px; margin-bottom:8px;">
+                        <label style="font-size: 9px; font-weight:bold; color:#22543d;">1. Select Customer / Party Name:</label>
+                        <select id="dispCustomerSelect" onchange="loadCustomerReadyOrdersForDispatch()"></select>
+
+                        <div id="dispMultiOrderContainer" style="margin-top:6px;"></div>
+
+                        <div style="display:grid; grid-template-columns: 1fr 1fr; gap:5px; margin-top:6px;">
+                            <div>
+                                <label style="font-size: 9px;">Invoice / Bill Number:</label>
+                                <input type="text" id="dispInvoiceNo" placeholder="e.g. INV-2026-089">
+                            </div>
+                            <div>
+                                <label style="font-size: 9px;">GT / LR / Transporter Vehicle:</label>
+                                <input type="text" id="dispGtNo" placeholder="e.g. GT-7788">
+                            </div>
+                        </div>
+
+                        <label style="font-size: 9px;">Dispatch Date:</label>
+                        <input type="date" id="dispDate">
+
+                        <button onclick="submitMultiItemDispatch()" style="background:#2f855a; margin-top:4px;">🚚 Confirm Multi-Item Dispatch & Deduct Stock</button>
+                    </div>
+                </div>
+
+                <!-- 3. Admin Correction, Overrides & Emergency Stock Transfer -->
+                <div class="card hidden" id="secAdminJobEdit">
+                    <h3>🛠️ Admin - Corrections & Stock Transfers</h3>
+                    
+                    <!-- Emergency Stock Re-Allocation Transfer -->
+                    <div style="background:#ebf8ff; border:1px solid #bee3f8; padding:8px; border-radius:5px; margin-bottom:10px;">
+                        <span style="font-size:10px; font-weight:bold; color:#2b6cb0;">🔄 EMERGENCY STOCK RE-ALLOCATION (CROSS-DISPATCH):</span>
+                        <p style="margin:2px 0 4px 0; font-size:9px; color:#4a5568;">Transfer ready finished boxes from one customer order to another urgent customer.</p>
+                        
+                        <label style="font-size:9px;">1. Source Order (Has Ready Stock):</label>
+                        <select id="reallocSourceOrderSelect"></select>
+
+                        <label style="font-size:9px;">2. Target Order (Needs Stock):</label>
+                        <select id="reallocTargetOrderSelect"></select>
+
+                        <label style="font-size:9px;">Boxes to Transfer:</label>
+                        <input type="number" id="reallocBoxesQty" placeholder="Boxes Qty to Move">
+
+                        <button onclick="adminExecuteStockReallocation()" style="background:#2b6cb0; margin-top:4px;">🔄 Transfer Ready Boxes to Target</button>
+                    </div>
+
+                    <!-- Customer Order Specification Correction -->
+                    <div style="background:#fffaf0; border:1px solid #feebc8; padding:8px; border-radius:5px; margin-bottom:10px;">
+                        <span style="font-size:10px; font-weight:bold; color:#dd6b20;">1. EDIT CUSTOMER ORDER & KIT TYPE:</span>
+                        <select id="adminPackOrderSelect" onchange="loadPackOrderForAdminEdit()" style="margin-top:4px;"></select>
+
+                        <div id="adminOrderEditPanel" class="hidden">
+                            <label style="font-size: 9px;">Order Total Qty (Pieces):</label>
+                            <input type="number" id="editOrderQtyInput" placeholder="Updated Total Qty">
+
+                            <label style="font-size: 9px;">Pcs Per Box (Box Capacity):</label>
+                            <input type="number" id="editBoxSizeInput" placeholder="Updated Pcs Per Box">
+
+                            <label style="font-size: 9px;">Packing Type:</label>
+                            <select id="editPackTypeSelect" onchange="toggleAdminEditPackType()">
+                                <option value="KIT">COMBO KIT PACKING</option>
+                                <option value="INDIVIDUAL">INDIVIDUAL SINGLE ITEM</option>
+                            </select>
+
+                            <div id="adminEditSingleSec" class="hidden" style="margin-top:4px;">
+                                <label style="font-size:9px;">Single Item Name:</label>
+                                <select id="adminEditSingleItemSelect"></select>
+                            </div>
+
+                            <div id="adminEditKitSec" style="margin-top:4px;">
+                                <span style="font-size:9px; font-weight:bold; color:#2b6cb0;">Update Kit Composition:</span>
+                                <div class="kit-checkboxes" style="margin:2px 0;">
+                                    <label><input type="checkbox" class="admin-edit-kit-item" value="Tissue"> Tissue</label>
+                                    <label><input type="checkbox" class="admin-edit-kit-item" value="Spoon"> Spoon</label>
+                                    <label><input type="checkbox" class="admin-edit-kit-item" value="Fork"> Fork</label>
+                                    <label><input type="checkbox" class="admin-edit-kit-item" value="Knife"> Knife</label>
+                                    <label><input type="checkbox" class="admin-edit-kit-item" value="Dessert Spoon"> Dessert Spoon</label>
+                                </div>
+                            </div>
+
+                            <button onclick="saveAdminOrderCorrection()" style="background:#d69e2e; margin-top:5px;">Save Order & Kit Correction</button>
+                        </div>
+                    </div>
+
+                    <!-- Production Batch Output Quantity Correction -->
+                    <div style="background:#f0fff4; border:1px solid #c6f6d5; padding:8px; border-radius:5px; margin-bottom:10px;">
+                        <span style="font-size:10px; font-weight:bold; color:#22543d;">2. CORRECT PRODUCED BATCH QTY (STOCK FIX):</span>
+                        <label style="font-size:9px; margin-top:4px; display:block;">Select Production Job:</label>
+                        <select id="adminBatchJobSelect" onchange="loadBatchesForSelectedJob()"></select>
+
+                        <div id="adminBatchEditPanel" class="hidden">
+                            <label style="font-size:9px;">Select Completed Batch to Correct:</label>
+                            <select id="adminBatchSelect" onchange="loadBatchQtyForEdit()"></select>
+
+                            <label style="font-size:9px;">Corrected Output Qty (Rolls/Crates):</label>
+                            <input type="number" id="editBatchOutputQtyInput" placeholder="Actual Corrected Output">
+
+                            <button onclick="saveAdminBatchQtyCorrection()" style="background:#2f855a; margin-top:4px;">Update Batch Output & Adjust Stock</button>
+                        </div>
+                    </div>
+
+                    <!-- Job ID & Product Name Correction -->
+                    <div style="background:#edf2f7; padding:8px; border-radius:5px;">
+                        <span style="font-size:10px; font-weight:bold; color:#2b6cb0;">3. CORRECT JOB ID / ITEM NAME:</span>
+                        <select id="adminEditJobSelect" onchange="loadJobForEdit()" style="margin-top:4px;"></select>
+
+                        <label style="font-size: 9px;">New Job Number:</label>
+                        <input type="text" id="editJobNumber" placeholder="New Job Number">
+
+                        <label style="font-size: 9px;">Correct Product Item Name:</label>
+                        <select id="editProductType"></select>
+
+                        <label style="font-size: 9px;">Paper Brand / Mill Name:</label>
+                        <input type="text" id="editPaperBrand" placeholder="Paper Brand / Mill">
+
+                        <button onclick="saveAdminJobCorrection()" style="background:#2b6cb0; margin-top:5px;">Update Job Meta Details</button>
+                    </div>
+                </div>
+
+                <!-- 4. Slitting Desk -->
+                <div class="card hidden" id="secSlitting">
+                    <h3>1. Slitting Desk (Rolls Production)</h3>
+                    <label style="font-size: 10px;">Job Number:</label>
+                    <input type="text" id="newJobId" placeholder="e.g. JOB-901" oninput="this.value = this.value.toUpperCase()">
+                    
+                    <label style="font-size: 10px;">Select Product Item:</label>
+                    <select id="newProductType"></select>
+
+                    <label style="font-size: 10px; color:#2b6cb0; font-weight:bold;">Paper Brand / Mill Name (Origin):</label>
+                    <input type="text" id="newPaperBrand" list="paperBrandDatalist" placeholder="e.g. ITC / CENTURY / JK">
+
+                    <label style="font-size: 10px; color:#805ad5; font-weight:bold;">Slitting Operator Name:</label>
+                    <input type="text" id="slitWorkerName" list="slitWorkerDatalist" placeholder="e.g. RAMESH_SLIT">
+
+                    <label style="font-size: 10px;">Working Shift:</label>
+                    <select id="slitShiftSelect" onchange="validateShiftSelection(this)">
+                        <option value="DAY">DAY SHIFT</option>
+                        <option value="NIGHT">NIGHT SHIFT</option>
+                    </select>
+
+                    <button onclick="createSlittingJob()">▶ Start Slitting Job</button>
+
+                    <hr style="margin: 8px 0; border: none; border-top: 1px solid #e2e8f0;">
+
+                    <label style="font-size: 10px;">Active Slitting Job:</label>
+                    <select id="runningSlitJobsSelect"></select>
+
+                    <div style="display:grid; grid-template-columns: 1fr 1fr; gap:5px;">
+                        <div>
+                            <label style="font-size: 9px;">Total Output Rolls:</label>
+                            <input type="number" id="slitOutputRollCount" placeholder="e.g. 9">
+                        </div>
+                        <div>
+                            <label style="font-size: 9px; color:#2f855a; font-weight:bold;">Output Weight (KG):</label>
+                            <input type="number" id="slitOutputWeightKg" placeholder="e.g. 145">
+                        </div>
+                    </div>
+
+                    <div style="display:grid; grid-template-columns: 1fr 1fr; gap:5px;">
+                        <button class="btn-hold" onclick="openHoldModal('Slitting-1')">⏸️ Hold / Breakdown</button>
+                        <button class="btn-done" onclick="completeSlittingJob()">⏹ Finish & Transfer</button>
+                    </div>
+                </div>
+
+                <!-- 5. Cutting, Forming & QC Desk -->
+                <div class="card hidden" id="secOperator">
+                    <h3>2. Cutting, Forming & QC Desk</h3>
+                    <label style="font-size: 10px;">Process Stage:</label>
+                    <select id="processSelect" onchange="updateMachineList(); updateFilterProductDropdown(); updateProcessWorkerDatalist();"></select>
+
+                    <label style="font-size: 10px; color:#2b6cb0; font-weight:bold;">1. Select Product Filter:</label>
+                    <select id="filterProductSelect" onchange="updatePendingDropdown()"></select>
+
+                    <label style="font-size: 10px;">2. Select Machine / Desk:</label>
+                    <select id="machineSelect" onchange="updateRunningDropdown();"></select>
+
+                    <label style="font-size: 10px;">3. Working Shift:</label>
+                    <select id="shiftSelect" onchange="validateShiftSelection(this)">
+                        <option value="DAY">DAY SHIFT</option>
+                        <option value="NIGHT">NIGHT SHIFT</option>
+                    </select>
+
+                    <label style="font-size: 10px; color:#805ad5; font-weight:bold;">Operator / Worker Name (Auto-Suggest):</label>
+                    <input type="text" id="operatorWorkerNameInput" list="dynamicStageWorkerDatalist" placeholder="Type Operator Name">
+
+                    <label style="font-size: 10px;">4. Select Job Queue:</label>
+                    <select id="pendingJobsSelect" onchange="autoFillJobInfo()"></select>
+
+                    <div id="stockNoticeBox" class="info-box">Select Job to View Stock Info</div>
+
+                    <label style="font-size: 10px;" id="lblInputQty">Enter Input Qty to Issue:</label>
+                    <input type="number" id="issueQtyCount" placeholder="Enter Qty">
+                    
+                    <button onclick="acceptJob()">▶ Start Machine Job</button>
+
+                    <hr style="margin: 8px 0; border: none; border-top: 1px solid #e2e8f0;">
+
+                    <label style="font-size: 10px;">Running Jobs on Selected Machine:</label>
+                    <select id="runningJobsSelect" onchange="updateRunningJobDisplayInfo()"></select>
+
+                    <div id="activeJobStatusBox" class="info-box" style="background:#fffaf0; border-color:#dd6b20;">No Active Job Selected</div>
+
+                    <div style="display:grid; grid-template-columns: 1.2fr 0.8fr; gap:5px;">
+                        <div>
+                            <label style="font-size: 9px; color:#2f855a; font-weight:bold;">Passed Output Crates:</label>
+                            <input type="number" id="outputCrateCount" placeholder="e.g. 6">
+                        </div>
+                        <div>
+                            <label style="font-size: 9px; color:#e53e3e; font-weight:bold;">Rejected / Scrap Crates:</label>
+                            <input type="number" id="rejectedCrateCount" placeholder="e.g. 0" value="0">
+                        </div>
+                    </div>
+
+                    <div style="display:grid; grid-template-columns: 1fr 1fr; gap:5px;">
+                        <button class="btn-hold" onclick="openHoldModal(document.getElementById('machineSelect').value)">⏸️ Hold / Breakdown</button>
+                        <button class="btn-done" onclick="completeJob()">⏹️ Finish Job</button>
+                    </div>
+                </div>
+
+                <!-- 6. Packing Station Desk -->
+                <div class="card hidden" id="secPackingDesk">
+                    <h3>📦 3. Packing Machine Station</h3>
+
+                    <label style="font-size: 10px; font-weight:bold; color:#2b6cb0;">SELECT PENDING ORDER / REGULAR STOCK:</label>
+                    <select id="pendingPackOrderSelect" onchange="loadPackJobDetails()"></select>
+
+                    <div id="packOrderDetailsPanel" class="hidden" style="background:#f7fafc; padding:8px; border-radius:5px; border:1px solid #cbd5e0; margin-bottom:8px;">
+                        <div style="font-size:10px; line-height: 1.5;">
+                            <b>Customer / Brand:</b> <span id="lblCustName" style="color:#2b6cb0; font-weight:bold;">-</span><br>
+                            <b>Pack Configuration:</b> <span id="lblKitType" style="color:#2f855a; font-weight:bold;">-</span><br>
+                            <b>Target Order Qty:</b> <span id="lblOrderQty" style="font-weight:bold;">-</span> Pcs | <b>Box Size:</b> <span id="lblPcsBox">-</span> Pcs/Box<br>
+                            <b>Target Boxes:</b> <span id="lblTargetBoxes" style="color:#2b6cb0; font-weight:bold;">-</span> Boxes | <b>Balance to Pack:</b> <span id="lblBalanceQty" style="color:#e53e3e; font-weight:bold;">-</span> Pcs
+                        </div>
+
+                        <div id="packOperatorInstructionBox" style="background:#fffaf0; border:1px dashed #dd6b20; padding:6px; border-radius:4px; margin-top:6px; font-size:10px;">
+                            <b>📌 Packaging Specs:</b><br>
+                            • Box Wrapping: <b id="lblWrapVal">-</b> | Label: <b id="lblLabelVal">-</b><br>
+                            • Remarks: <span id="lblRemarkVal" style="color:#4a5568; font-style:italic;">None</span>
+                        </div>
+
+                        <div id="dynamicCrateSection" class="crate-issue-box">
+                            <h5>🔍 Select QC Job & Crates for Traceability:</h5>
+                            <div id="crateInputsContainer"></div>
+                            <button onclick="addMoreCratesToActiveRun()" style="background:#2b6cb0; font-size:10px; padding:4px 8px; margin-top:5px;">➕ Issue / Add More QC Crates to Run</button>
+                        </div>
+
+                        <label style="font-size: 9px; margin-top:5px; font-weight:bold; color:#2f855a;">Packed Output Boxes Produced in this Run:</label>
+                        <input type="number" id="packedBoxesOutput" placeholder="Boxes Produced in this Run">
+                    </div>
+
+                    <label style="font-size: 10px;">Working Shift:</label>
+                    <select id="packShiftSelect" onchange="validateShiftSelection(this)">
+                        <option value="DAY">DAY SHIFT</option>
+                        <option value="NIGHT">NIGHT SHIFT</option>
+                    </select>
+
+                    <label style="font-size: 10px; color:#805ad5; font-weight:bold;">Packing Operator Name:</label>
+                    <input type="text" id="packWorkerNameInput" list="packWorkerDatalist" placeholder="e.g. SURESH_PACK">
+
+                    <div style="display:grid; grid-template-columns: 1fr 1fr 1fr; gap:4px; margin-top:5px;">
+                        <button onclick="startPackingJob()" style="background:#2f855a;">▶ Start</button>
+                        <button class="btn-hold" onclick="openHoldModal('Packing-Kit Machine')">⏸️ Hold</button>
+                        <button class="btn-done" onclick="completePackingJob()">⏹️ Save & Finish</button>
+                    </div>
+                </div>
+
+                <!-- 7. Universal Lifecycle Search -->
+                <div class="card hidden" id="secReport">
+                    <h3>4. Search Job / Order / Brand History</h3>
+                    <input type="text" id="searchJobId" placeholder="ENTER JOB NO, ORD NO, INVOICE NO, OR BRAND NAME..." oninput="this.value = this.value.toUpperCase()">
+                    <button onclick="trackJob()">Search Lifecycle & Traceability</button>
+                    <div id="historyResult" style="margin-top:8px;"></div>
+                </div>
+
+                <!-- 8. Admin Settings, Google Drive Sync, Shift Config & Reports -->
+                <div class="card hidden" id="secAdminSettings">
+                    <h3>📊 5. Reports & Admin Controls</h3>
+                    
+                    <!-- Google Drive Backup Sync Integration -->
+                    <div style="background:#f0f4f8; border:1px solid #cbd5e0; padding:8px; border-radius:5px; margin-bottom:10px;">
+                        <span style="font-size:10px; font-weight:bold; color:#2b6cb0;">☁️ GOOGLE DRIVE CLOUD BACKUP & SYNC:</span>
+                        <p style="margin:2px 0 6px 0; font-size:9px; color:#4a5568;">Connect your private Google Drive to securely upload and sync factory records.</p>
+                        
+                        <div style="display:grid; grid-template-columns: 1fr 1fr; gap:5px;">
+                            <button onclick="syncToGoogleDrive()" class="btn-gdrive" style="font-size:10px; padding:6px;">☁️ Backup to Google Drive</button>
+                            <button onclick="downloadBackupJSON()" style="background:#4a5568; font-size:10px; padding:6px;">💾 Local JSON</button>
+                        </div>
+                    </div>
+
+                    <!-- Custom Shift Operating Hours -->
+                    <div style="background:#ebf8ff; border:1px solid #bee3f8; padding:8px; border-radius:5px; margin-bottom:10px;">
+                        <span style="font-size:10px; font-weight:bold; color:#2b6cb0;">⏰ CUSTOM SHIFT TIMINGS & AUTO VALIDATOR:</span>
+                        <div style="display:grid; grid-template-columns: 1fr 1fr; gap:5px; margin-top:4px;">
+                            <div>
+                                <label style="font-size:9px; font-weight:bold;">Day Start / End:</label>
+                                <div style="display:flex; gap:2px;">
+                                    <input type="time" id="cfgDayStart" value="08:00">
+                                    <input type="time" id="cfgDayEnd" value="20:00">
+                                </div>
+                            </div>
+                            <div>
+                                <label style="font-size:9px; font-weight:bold;">Night Start / End:</label>
+                                <div style="display:flex; gap:2px;">
+                                    <input type="time" id="cfgNightStart" value="20:00">
+                                    <input type="time" id="cfgNightEnd" value="08:00">
+                                </div>
+                            </div>
+                        </div>
+                        <button onclick="saveShiftConfig()" style="background:#2b6cb0; font-size:10px; padding:5px; margin-top:4px;">💾 Save Shift Timings</button>
+                    </div>
+
+                    <!-- Automated WhatsApp API Gateway -->
+                    <div style="background:#f0fff4; border:1px solid #c6f6d5; padding:8px; border-radius:5px; margin-bottom:10px;">
+                        <span style="font-size:10px; font-weight:bold; color:#22543d;">🤖 AUTO WHATSAPP API GATEWAY:</span>
+                        <label style="font-size:9px; margin-top:4px; display:block;">Target WhatsApp Phone Number:</label>
+                        <input type="text" id="cfgWaPhone" placeholder="e.g. 919876543210">
+
+                        <label style="font-size:9px; display:block;">CallMeBot / Gateway API Key:</label>
+                        <input type="password" id="cfgWaApiKey" placeholder="Enter API Key">
+
+                        <div style="display:flex; align-items:center; gap:5px; margin:4px 0;">
+                            <input type="checkbox" id="cfgAutoSendEnable" style="width:auto; margin:0;">
+                            <label for="cfgAutoSendEnable" style="font-size:10px; font-weight:bold; color:#22543d; cursor:pointer;">Enable Auto Shift-End Dispatch</label>
+                        </div>
+
+                        <div style="display:grid; grid-template-columns: 1fr 1fr; gap:5px; margin-top:4px;">
+                            <button onclick="saveWhatsAppConfig()" style="background:#2f855a; font-size:10px; padding:5px;">💾 Save WhatsApp</button>
+                            <button class="btn-wa" onclick="testWhatsAppApiNow()" style="font-size:10px; padding:5px;">📲 Test Send Now</button>
+                        </div>
+                    </div>
+
+                    <!-- Brand Logo Manager -->
+                    <div style="background:#edf2f7; padding:8px; border-radius:5px; margin-bottom:10px;">
+                        <span style="font-size:10px; font-weight:bold; color:#2b6cb0;">🖼️ BRAND LOGO MANAGER:</span>
+                        <div style="display:flex; gap:5px; margin-top:4px;">
+                            <button onclick="document.getElementById('customLogoInput').click()" style="background:#2b6cb0; font-size:10px; padding:5px;">📁 Choose Logo</button>
+                            <button onclick="resetBrandLogo()" style="background:#e53e3e; font-size:10px; padding:5px;">Reset Default</button>
+                        </div>
+                        <input type="file" id="customLogoInput" class="hidden" accept="image/*" onchange="handleCustomLogoUpload(event)">
+                    </div>
+
+                    <!-- Admin Master Password Reset for Users -->
+                    <div style="background:#fffaf0; border:1px solid #feebc8; padding:8px; border-radius:5px; margin-bottom:10px;">
+                        <span style="font-size:10px; font-weight:bold; color:#dd6b20;">🔑 RESET USER PASSWORD:</span>
+                        <select id="admResetUserSelect" style="margin-top:2px;"></select>
+                        <input type="password" id="admNewPassInput" placeholder="Enter New Password">
+                        <button onclick="adminResetUserPassword()" style="background:#dd6b20; margin-top:4px;">Save New Password</button>
+                    </div>
+
+                    <span style="font-size:10px; font-weight:bold; color:#2b6cb0;">Machine Filter:</span>
+                    <select id="reportMachineSelect">
+                        <option value="ALL">-- ALL MACHINES REPORT --</option>
+                    </select>
+
+                    <span style="font-size:10px; font-weight:bold; color:#2f855a;">Date Range:</span>
+                    <div style="display:grid; grid-template-columns:1fr 1fr; gap:5px; margin-top:3px;">
+                        <input type="date" id="reportStartDate">
+                        <input type="date" id="reportEndDate">
+                    </div>
+                    
+                    <button class="btn-excel" onclick="exportToExcel()">📥 Export Performance & Dispatches (CSV)</button>
+
+                    <hr style="margin:10px 0; border:none; border-top:1px solid #e2e8f0;">
+
+                    <h4 style="margin:0 0 5px 0; font-size:11px; color:#2b6cb0;">⚙️ Code Script Update & Deploy</h4>
+                    <textarea id="htmlCodeInput" rows="3" placeholder="Paste updated HTML/Script code here..."></textarea>
+                    <button onclick="updateSystemCode()" style="background:#4c51bf;">🚀 Deploy & Update ERP System Code</button>
+
+                    <!-- User Creation with Multi-Department Permissions -->
+                    <hr style="margin:10px 0; border:none; border-top:1px solid #e2e8f0;">
+
+                    <h4 style="margin:0 0 5px 0; font-size:11px; color:#2b6cb0;">👤 Create / Update User & Department Rights</h4>
+                    <input type="text" id="admUserKey" placeholder="USER ID (e.g. RAMESH_MULTI)">
+                    <input type="password" id="admUserPass" placeholder="PASSWORD">
+                    
+                    <span style="font-size:10px; font-weight:bold; color:#4a5568;">Assign Multi-Department Access Permissions:</span>
+                    <div class="perm-grid">
+                        <label><input type="checkbox" class="user-perm-cb" value="Admin"> Master Admin</label>
+                        <label><input type="checkbox" class="user-perm-cb" value="Marketing"> Marketing</label>
+                        <label><input type="checkbox" class="user-perm-cb" value="Dispatch"> Dispatch Desk</label>
+                        <label><input type="checkbox" class="user-perm-cb" value="Slitting"> Slitting Desk</label>
+                        <label><input type="checkbox" class="user-perm-cb" value="Cutting"> Cutting Desk</label>
+                        <label><input type="checkbox" class="user-perm-cb" value="Forming"> Forming Desk</label>
+                        <label><input type="checkbox" class="user-perm-cb" value="QC"> QC Desk</label>
+                        <label><input type="checkbox" class="user-perm-cb" value="Packing"> Packing Desk</label>
+                    </div>
+                    
+                    <button onclick="adminAddUser()" style="background:#2b6cb0; margin-top:4px;">Save User & Department Rights</button>
+                    
+                    <hr style="margin:8px 0; border:none; border-top:1px solid #e2e8f0;">
+                    <button onclick="adminForcedResetAllData()" style="background:#e53e3e;">🔒 Master Reset All Data to ZERO (Protected)</button>
+                </div>
+
+            </div>
+
+            <!-- RIGHT MAIN DASHBOARD -->
+            <div class="main-content">
+
+                <!-- 1. Live Production Analytics & Bar Chart (ADMIN ONLY) -->
+                <div class="card hidden" id="dashSecAnalytics">
+                    <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:8px;">
+                        <h3 style="margin:0; border:none; padding:0;">📈 Monthly Factory Production Analytics</h3>
+                        <div style="display:flex; gap:5px; align-items:center;">
+                            <input type="date" id="dashStartDate" style="width:auto; margin:0; padding:4px 6px; font-size:10px;">
+                            <span style="font-size:10px; font-weight:bold;">to</span>
+                            <input type="date" id="dashEndDate" style="width:auto; margin:0; padding:4px 6px; font-size:10px;">
+                            <button onclick="renderDashboardAnalytics()" style="width:auto; margin:0; padding:4px 8px; font-size:10px; background:#2b6cb0;">Apply</button>
+                        </div>
+                    </div>
+
+                    <div id="dashBarGraphContainer" style="margin-top:10px;"></div>
+                    <div class="analytics-grid" id="dashAnalyticsCards"></div>
+
+                    <div style="display:grid; grid-template-columns: 1fr; gap:10px; margin-top:12px;">
+                        <div style="background:#f7fafc; padding:8px; border-radius:6px; border:1px solid #e2e8f0;">
+                            <h4 style="margin:0 0 5px 0; font-size:11px; color:#2b6cb0;">⚙️ Machine-Wise Monthly Production Output</h4>
+                            <table class="summary-table">
+                                <thead><tr><th>Machine</th><th>Runs</th><th>Total Output</th><th>Operating Time</th></tr></thead>
+                                <tbody id="dashMachineSummaryBody"></tbody>
+                            </table>
+                        </div>
+                        <div style="background:#f7fafc; padding:8px; border-radius:6px; border:1px solid #e2e8f0;">
+                            <h4 style="margin:0 0 5px 0; font-size:11px; color:#2f855a;">🏆 Worker / Operator Performance Ranking</h4>
+                            <table class="summary-table">
+                                <thead><tr><th>Worker Name</th><th>Batches Worked</th><th>Total Produced</th><th>Logged Hours</th></tr></thead>
+                                <tbody id="dashWorkerSummaryBody"></tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- 2. Raw & Processed Stock Matrix -->
+                <div class="card hidden" id="dashSecStockMatrix">
+                    <h3>📊 Raw & Processed Stock Matrix (Click Cell for Job Breakdown)</h3>
+                    <table class="summary-table">
+                        <thead>
+                            <tr>
+                                <th>Product Item</th>
+                                <th>Rolls Stock</th>
+                                <th>Cutting Crates</th>
+                                <th>Forming Crates</th>
+                                <th>QC Approved Crates</th>
+                                <th>Total Packed (Crates)</th>
+                            </tr>
+                        </thead>
+                        <tbody id="productSummaryBody"></tbody>
+                    </table>
+                </div>
+
+                <!-- 3. Customer Orders & Finished Goods -->
+                <div class="card hidden" id="dashSecCustomerOrders">
+                    <h3>📦 Live Customer Orders & Finished Goods (Click Brand Name for Live Spec Sheet)</h3>
+                    <table class="summary-table">
+                        <thead>
+                            <tr>
+                                <th>Customer / Brand</th>
+                                <th>Pack Config</th>
+                                <th>Target Qty</th>
+                                <th>Total Produced (Boxes)</th>
+                                <th>Dispatched (Boxes)</th>
+                                <th>Ready in Warehouse (Boxes)</th>
+                                <th>Order Status</th>
+                            </tr>
+                        </thead>
+                        <tbody id="kitStockSummaryBody"></tbody>
+                    </table>
+                </div>
+
+                <!-- 4. Workstations Live Tracker -->
+                <div class="card hidden" id="dashSecWorkstations">
+                    <h3>⚙️ Workstations Live Status & Crates (Click Card for 1-Line Clean Run History & Chart)</h3>
+                    <div class="dash-grid" id="machineDashboard"></div>
+                </div>
+
+            </div>
+
+        </div>
+    </div>
+
+    <!-- Universal Datalists -->
+    <datalist id="slitWorkerDatalist"></datalist>
+    <datalist id="packWorkerDatalist"></datalist>
+    <datalist id="dynamicStageWorkerDatalist"></datalist>
+    <datalist id="paperBrandDatalist"></datalist>
+
+    <!-- Modals -->
+    <div id="holdBreakdownModal" class="modal">
+        <div class="modal-content" style="max-width:400px; border-top:5px solid #dd6b20;">
+            <span class="close-btn" onclick="closeHoldModal()">&times;</span>
+            <h3 style="color:#dd6b20; margin-top:0;">⏸️ Machine Hold & Breakdown Notice</h3>
+            <label style="font-size:10px;">Target Machine:</label>
+            <input type="text" id="holdMachineNameInput" readonly style="background:#edf2f7; font-weight:bold;">
+            <label style="font-size:10px;">Breakdown / Pause Reason:</label>
+            <select id="holdReasonSelect">
+                <option value="Mechanical Heater / Tooling Issue">Mechanical Heater / Tooling Issue</option>
+                <option value="Raw Paper Roll Change / Setup">Raw Paper Roll Change / Setup</option>
+                <option value="Electrical / Sensor Fault">Electrical / Sensor Fault</option>
+                <option value="Operator Lunch / Tea Break">Operator Lunch / Tea Break</option>
+                <option value="Routine Cleaning & Maintenance">Routine Cleaning & Maintenance</option>
+            </select>
+            <label style="font-size:10px;">Specific Remarks (Optional):</label>
+            <input type="text" id="holdRemarksInput" placeholder="e.g. Temp controller error">
+            <div style="display:grid; grid-template-columns: 1fr 1fr; gap:5px; margin-top:8px;">
+                <button class="btn-hold" onclick="confirmExecuteHold(false)">Pause Silently</button>
+                <button class="btn-wa" onclick="confirmExecuteHold(true)">🚨 Alert on WhatsApp</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="challanModal" class="modal">
+        <div class="modal-content" style="max-width:650px;">
+            <span class="close-btn" onclick="closeChallanModal()">&times;</span>
+            <div style="display:flex; justify-content:space-between; align-items:center; border-bottom:1px solid #cbd5e0; padding-bottom:6px;">
+                <h3 style="margin:0; color:#1a365d;">📄 Delivery Challan & Gatepass</h3>
+                <button onclick="window.print()" class="btn-excel" style="width:auto; padding:4px 10px; margin:0;">🖨️ Print Challan</button>
+            </div>
+            <div id="challanPrintArea" style="padding:15px; font-size:12px; line-height:1.6; color:#2d3748;"></div>
+        </div>
+    </div>
+
+    <div id="selfPasswordModal" class="modal">
+        <div class="modal-content" style="max-width:380px;">
+            <span class="close-btn" onclick="closeSelfPasswordModal()">&times;</span>
+            <h3 style="color:#2b6cb0; margin-top:0;">🔑 Change Your Private Password</h3>
+            <label style="font-size:10px;">Current Password:</label>
+            <input type="password" id="selfOldPass" placeholder="Enter Current Password">
+            <label style="font-size:10px;">New Password:</label>
+            <input type="password" id="selfNewPass" placeholder="Enter New Password">
+            <button onclick="saveSelfPasswordChange()" style="background:#2f855a; margin-top:5px;">Update Password</button>
+        </div>
+    </div>
+
+    <div id="stockDetailModal" class="modal">
+        <div class="modal-content">
+            <span class="close-btn" onclick="closeStockModal()">&times;</span>
+            <h3 id="modalTitle" style="color: #2b6cb0; margin-top: 0;">Stock Breakdown</h3>
+            <div id="modalBody" style="max-height: 300px; overflow-y: auto; font-size: 12px; margin-top: 10px;"></div>
+        </div>
+    </div>
+
+    <div id="stationDetailModal" class="modal">
+        <div class="modal-content">
+            <span class="close-btn" onclick="closeStationModal()">&times;</span>
+            <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; border-bottom: 2px solid #edf2f7; padding-bottom:6px;">
+                <h3 id="stationModalTitle" style="color: #2b6cb0; margin: 0;">Workstation Analytics</h3>
+                <button id="btnExportCurrentMachine" class="btn-excel" style="width:auto; font-size:10px; padding:4px 8px; margin:0;" onclick="exportSpecificMachineReport()">📥 Export This Machine Report (CSV)</button>
+            </div>
+            <div id="stationChartContainer" style="margin-top:8px;">
+                <div id="stationChartBars"></div>
+            </div>
+            <h4 style="margin:10px 0 4px 0; font-size:11px; color:#4a5568;">📋 Machine Run-by-Run Consolidated History (1 Job = 1 Row)</h4>
+            <div style="max-height: 320px; overflow-y: auto;">
+                <table class="summary-table">
+                    <thead>
+                        <tr>
+                            <th>Job ID / Order</th>
+                            <th>Item (Paper Origin)</th>
+                            <th>Operator / Worker</th>
+                            <th>Output Produced</th>
+                            <th>Start Time</th>
+                            <th>End Time</th>
+                            <th>Duration</th>
+                            <th>Status</th>
+                        </tr>
+                    </thead>
+                    <tbody id="stationConsolidatedHistoryBody"></tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <div id="orderSpecModal" class="modal">
+        <div class="modal-content" style="max-width:620px; border-top: 5px solid #2b6cb0;">
+            <span class="close-btn" onclick="closeOrderSpecModal()">&times;</span>
+            <h3 style="margin-top:0; color:#1a365d;">📋 Customer Packing & Dispatch Spec Sheet</h3>
+            <div id="orderSpecContent" style="font-size:12px; line-height:1.7;"></div>
+        </div>
+    </div>
+
+    <script>
+        let users = JSON.parse(localStorage.getItem('wk_users')) || {
+            'admin': { pass: 'admin123', perms: ['Admin', 'Marketing', 'Dispatch', 'Slitting', 'Cutting', 'Forming', 'QC', 'Packing'] },
+            'marketing': { pass: 'mkt123', perms: ['Marketing'] },
+            'dispatch_user': { pass: 'disp123', perms: ['Dispatch'] },
+            'slit_user': { pass: 'slit123', perms: ['Slitting'] },
+            'cut_user': { pass: 'cut123', perms: ['Cutting'] },
+            'form_user': { pass: 'form123', perms: ['Forming'] },
+            'qc_user': { pass: 'qc123', perms: ['QC'] },
+            'pack_user': { pass: 'pack123', perms: ['Packing'] }
+        };
+
+        let machines = JSON.parse(localStorage.getItem('wk_machines')) || {
+            'Slitting': ['Slitting-1'],
+            'Cutting': ['Cutting-1', 'Cutting-2'],
+            'Forming': ['Forming-1', 'Forming-2', 'Forming-3', 'Forming-4', 'Forming-5', 'Forming-6', 'Forming-7'],
+            'QC': ['QC-Desk'],
+            'Packing': ['Packing-Kit Machine']
+        };
+
+        let products = ['Spoon', 'Fork', 'Knife', 'Dessert Spoon'];
+        
+        let deptWorkers = JSON.parse(localStorage.getItem('wk_dept_workers')) || {
+            'Slitting': ['RAMESH_SLIT', 'SURESH_SLIT'],
+            'Cutting': ['CUT_OP1', 'CUT_OP2'],
+            'Forming': ['FORM_OP1', 'FORM_OP2', 'FORM_OP3'],
+            'QC': ['QC_RAMESH', 'QC_DINESH'],
+            'Packing': ['PACK_SURESH', 'PACK_MAHESH']
+        };
+
+        let paperBrands = JSON.parse(localStorage.getItem('wk_paper_brands')) || ['ITC', 'CENTURY', 'JK PAPER', 'WEST COAST', 'EMAMI'];
+        let brandLogoData = localStorage.getItem('wk_brand_logo_base64') || "";
+        
+        let shiftConfig = JSON.parse(localStorage.getItem('wk_shift_config')) || {
+            dayStart: '08:00', dayEnd: '20:00', nightStart: '20:00', nightEnd: '08:00'
+        };
+
+        let whatsappConfig = JSON.parse(localStorage.getItem('wk_whatsapp_config')) || {
+            phone: '', apiKey: '', autoSend: false, lastSentKey: ''
+        };
+
+        let currentUser = null;
+        let currentActiveModalMachine = "";
+        let currentTargetHoldMachine = "";
+
+        let jobs = JSON.parse(localStorage.getItem('wk_factory_jobs')) || [];
+        let logs = JSON.parse(localStorage.getItem('wk_factory_logs')) || [];
+        let packJobs = JSON.parse(localStorage.getItem('wk_pack_jobs')) || [];
+
+        function applyBrandLogo() {
+            const hImg = document.getElementById('headerLogoImg');
+            const hFallback = document.getElementById('headerLogoFallback');
+            const lImg = document.getElementById('loginLogoImg');
+            const lFallback = document.getElementById('loginLogoFallback');
+
+            if(brandLogoData && brandLogoData.length > 50) {
+                hImg.src = brandLogoData;
+                hImg.classList.remove('hidden');
+                hFallback.classList.add('hidden');
+
+                lImg.src = brandLogoData;
+                lImg.classList.remove('hidden');
+                lFallback.classList.add('hidden');
+
+                updateManifestIcon(brandLogoData);
+            } else {
+                hImg.classList.add('hidden');
+                hFallback.classList.remove('hidden');
+
+                lImg.classList.add('hidden');
+                lFallback.classList.remove('hidden');
+            }
+        }
+
+        function updateManifestIcon(imgBase64) {
+            let manifestEl = document.querySelector('link[rel="manifest"]');
+            if(manifestEl) {
+                const manifestObj = {
+                    name: "Wünderkraf ERP",
+                    short_name: "Wünderkraf",
+                    start_url: ".",
+                    display: "standalone",
+                    background_color: "#1a365d",
+                    theme_color: "#1a365d",
+                    icons: [{
+                        src: imgBase64,
+                        sizes: "192x192 512x512",
+                        type: "image/png"
+                    }]
+                };
+                const stringManifest = JSON.stringify(manifestObj);
+                const blob = new Blob([stringManifest], {type: 'application/manifest+json'});
+                manifestEl.href = URL.createObjectURL(blob);
+            }
+        }
+
+        function handleCustomLogoUpload(event) {
+            const file = event.target.files[0];
+            if(file) {
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    brandLogoData = e.target.result;
+                    localStorage.setItem('wk_brand_logo_base64', brandLogoData);
+                    applyBrandLogo();
+                    alert('✅ Brand Logo Uploaded & Set Successfully for App & Header!');
+                };
+                reader.readAsDataURL(file);
+            }
+        }
+
+        function resetBrandLogo() {
+            if(confirm('Reset Brand Logo to Default?')) {
+                brandLogoData = "";
+                localStorage.removeItem('wk_brand_logo_base64');
+                applyBrandLogo();
+                alert('Brand Logo Reset to Default.');
+            }
+        }
+
+        function calculateTimeDifference(startStr, endStr) {
+            if (!startStr || !endStr || endStr === 'RUNNING' || endStr === 'HELD' || endStr === '') return "N/A (Active)";
+            try {
+                let s = new Date("1970/01/01 " + startStr);
+                let e = new Date("1970/01/01 " + endStr);
+                let diffMs = e - s;
+                if (diffMs < 0) diffMs += 24 * 60 * 60 * 1000; 
+                let diffMins = Math.floor(diffMs / 60000);
+                let hrs = Math.floor(diffMins / 60);
+                let mins = diffMins % 60;
+                return `${hrs > 0 ? hrs + 'h ' : ''}${mins}m`;
+            } catch(err) {
+                return "N/A";
+            }
+        }
+
+        function syncToGoogleDrive() {
+            const backupData = JSON.stringify({ jobs, logs, packJobs, users, deptWorkers, paperBrands, shiftConfig, whatsappConfig });
+            const blob = new Blob([backupData], { type: 'application/json' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `Wunderkraf_GDrive_Backup_${new Date().toISOString().split('T')[0]}.json`;
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            alert('☁️ Google Drive Backup Downloaded Successfully!');
+        }
+
+        function adminForcedResetAllData() {
+            const pass = prompt('⚠️ MASTER RESET LOCK!\nEnter Admin Reset Password to confirm Zero Wipe:');
+            if(pass === null) return;
+            if(pass.trim().toUpperCase() === 'MANOJ') {
+                if(confirm('CRITICAL SECURITY: Before wiping data to ZERO, an emergency backup will be downloaded automatically. Proceed?')) {
+                    const backupData = JSON.stringify({ jobs, logs, packJobs, users, deptWorkers, paperBrands, shiftConfig, whatsappConfig });
+                    const blob = new Blob([backupData], { type: 'application/json' });
+                    const url = URL.createObjectURL(blob);
+                    const a = document.createElement('a');
+                    a.href = url;
+                    a.download = `EMERGENCY_SAFETY_BACKUP_${new Date().toISOString().split('T')[0]}.json`;
+                    document.body.appendChild(a);
+                    a.click();
+                    document.body.removeChild(a);
+
+                    jobs = []; logs = []; packJobs = [];
+                    saveData();
+                    alert('⚠️ Emergency backup downloaded. All factory data reset to Zero!');
+                }
+            } else {
+                alert('❌ Invalid Password! Reset Denied.');
+            }
+        }
+
+        function getCurrentExpectedShift() {
+            const now = new Date();
+            const curTime = String(now.getHours()).padStart(2, '0') + ':' + String(now.getMinutes()).padStart(2, '0');
+            const ds = shiftConfig.dayStart || '08:00';
+            const de = shiftConfig.dayEnd || '20:00';
+            if(ds < de) {
+                if(curTime >= ds && curTime < de) return 'DAY';
+                else return 'NIGHT';
+            } else {
+                if(curTime >= ds || curTime < de) return 'DAY';
+                else return 'NIGHT';
+            }
+        }
+
+        function validateShiftSelection(selectElement) {
+            const selectedShift = selectElement.value;
+            const expectedShift = getCurrentExpectedShift();
+            if(selectedShift !== expectedShift) {
+                alert(`⚠️ SHIFT MISMATCH WARNING!\n\nCurrent factory time indicates [${expectedShift} SHIFT].\nYou selected [${selectedShift} SHIFT].\n\nPlease ensure you are logging work under the correct shift.`);
+            }
+        }
+
+        function autoSetDropdownToCurrentShift() {
+            const curShift = getCurrentExpectedShift();
+            const slitShift = document.getElementById('slitShiftSelect');
+            const opShift = document.getElementById('shiftSelect');
+            const packShift = document.getElementById('packShiftSelect');
+            if(slitShift) slitShift.value = curShift;
+            if(opShift) opShift.value = curShift;
+            if(packShift) packShift.value = curShift;
+        }
+
+        function saveShiftConfig() {
+            shiftConfig.dayStart = document.getElementById('cfgDayStart').value || '08:00';
+            shiftConfig.dayEnd = document.getElementById('cfgDayEnd').value || '20:00';
+            shiftConfig.nightStart = document.getElementById('cfgNightStart').value || '20:00';
+            shiftConfig.nightEnd = document.getElementById('cfgNightEnd').value || '08:00';
+            localStorage.setItem('wk_shift_config', JSON.stringify(shiftConfig));
+            alert('✅ Custom Shift Operating Hours Saved Successfully!');
+        }
+
+        function loadShiftConfigToUI() {
+            if(document.getElementById('cfgDayStart')) document.getElementById('cfgDayStart').value = shiftConfig.dayStart || '08:00';
+            if(document.getElementById('cfgDayEnd')) document.getElementById('cfgDayEnd').value = shiftConfig.dayEnd || '20:00';
+            if(document.getElementById('cfgNightStart')) document.getElementById('cfgNightStart').value = shiftConfig.nightStart || '20:00';
+            if(document.getElementById('cfgNightEnd')) document.getElementById('cfgNightEnd').value = shiftConfig.nightEnd || '08:00';
+            if(document.getElementById('cfgWaPhone')) document.getElementById('cfgWaPhone').value = whatsappConfig.phone || '';
+            if(document.getElementById('cfgWaApiKey')) document.getElementById('cfgWaApiKey').value = whatsappConfig.apiKey || '';
+            if(document.getElementById('cfgAutoSendEnable')) document.getElementById('cfgAutoSendEnable').checked = !!whatsappConfig.autoSend;
+        }
+
+        function saveWhatsAppConfig() {
+            whatsappConfig.phone = document.getElementById('cfgWaPhone').value.trim();
+            whatsappConfig.apiKey = document.getElementById('cfgWaApiKey').value.trim();
+            whatsappConfig.autoSend = document.getElementById('cfgAutoSendEnable').checked;
+            localStorage.setItem('wk_whatsapp_config', JSON.stringify(whatsappConfig));
+            alert('✅ WhatsApp Gateway Settings Saved!');
+        }
+
+        function generateShiftReportText(targetShift, reportDate) {
+            let totals = { 'Spoon': 0, 'Fork': 0, 'Knife': 0, 'Dessert Spoon': 0, 'Combos': 0, 'PaperKg': 0, 'Rejected': 0 };
+            let breakdowns = [];
+
+            logs.forEach(l => {
+                if(l.rawDate === reportDate && (!l.shift || l.shift === targetShift)) {
+                    if(l.action && (l.action.includes('Finished') || l.action.includes('Completed') || l.action.includes('Packed'))) {
+                        const match = l.action.match(/(\d+)\s*(Rolls|Crates|Boxes)/);
+                        if(match) {
+                            let q = parseInt(match[1]) || 0;
+                            if(l.product && totals.hasOwnProperty(l.product)) totals[l.product] += q;
+                            else if(l.stage === 'Packing') totals['Combos'] += q;
+                        }
+                        const matchKg = l.action.match(/(\d+)\s*KG/);
+                        if(matchKg) totals.PaperKg += parseInt(matchKg[1]) || 0;
+                        const matchRej = l.action.match(/Scrap:\s*(\d+)/);
+                        if(matchRej) totals.Rejected += parseInt(matchRej[1]) || 0;
+                    }
+                    if(l.action && l.action.includes('BREAKDOWN')) breakdowns.push(`${l.machine}`);
+                }
+            });
+
+            return `🏭 *WÜNDERKRAF PAPERWARE - ${targetShift} SHIFT REPORT*\n` +
+                   `📅 *Date:* ${reportDate}\n` +
+                   `---------------------------------\n` +
+                   `📜 *Paper Slit:* ${totals.PaperKg} KG\n` +
+                   `🥄 *Spoon Output:* ${totals.Spoon} Crates\n` +
+                   `🍴 *Fork Output:* ${totals.Fork} Crates\n` +
+                   `🔪 *Knife Output:* ${totals.Knife} Crates\n` +
+                   `🍨 *Dessert Spoon:* ${totals['Dessert Spoon']} Crates\n` +
+                   `📦 *Packed Finished Boxes:* ${totals.Combos} Boxes\n` +
+                   `🗑️ *QC Scrap / Rejections:* ${totals.Rejected} Crates\n` +
+                   `---------------------------------\n` +
+                   `⚠️ *Breakdowns:* ${breakdowns.length > 0 ? Array.from(new Set(breakdowns)).join(', ') : 'None (Zero Downtime)'}\n` +
+                   `🤖 *Automated Factory ERP Dispatch*`;
+        }
+
+        function executeWhatsAppApiCall(phone, apiKey, messageText, isAutomated) {
+            if(!phone || !apiKey) {
+                if(!isAutomated) alert('Please configure Phone Number and API Key in Admin Settings first!');
+                return;
+            }
+            const apiUrl = `https://api.callmebot.com/whatsapp.php?phone=${encodeURIComponent(phone)}&text=${encodeURIComponent(messageText)}&apikey=${encodeURIComponent(apiKey)}`;
+            fetch(apiUrl, { mode: 'no-cors' }).then(() => { if(!isAutomated) alert('✅ WhatsApp Broadcast Sent Successfully!'); });
+        }
+
+        function testWhatsAppApiNow() {
+            const phone = document.getElementById('cfgWaPhone').value.trim();
+            const apiKey = document.getElementById('cfgWaApiKey').value.trim();
+            const todayStr = new Date().toISOString().split('T')[0];
+            const curShift = getCurrentExpectedShift();
+            const text = generateShiftReportText(curShift, todayStr);
+            executeWhatsAppApiCall(phone, apiKey, text, false);
+        }
+
+        setInterval(function() {
+            if(!whatsappConfig.autoSend || !whatsappConfig.phone || !whatsappConfig.apiKey) return;
+            const now = new Date();
+            const curTime = String(now.getHours()).padStart(2, '0') + ':' + String(now.getMinutes()).padStart(2, '0');
+            const todayStr = now.toISOString().split('T')[0];
+            const dayEndTime = shiftConfig.dayEnd || '20:00';
+            const nightEndTime = shiftConfig.nightEnd || '08:00';
+            const triggerKeyDay = `${todayStr}_DAY_${dayEndTime}`;
+            const triggerKeyNight = `${todayStr}_NIGHT_${nightEndTime}`;
+
+            if(curTime === dayEndTime && whatsappConfig.lastSentKey !== triggerKeyDay) {
+                const msg = generateShiftReportText('DAY', todayStr);
+                executeWhatsAppApiCall(whatsappConfig.phone, whatsappConfig.apiKey, msg, true);
+                whatsappConfig.lastSentKey = triggerKeyDay;
+                localStorage.setItem('wk_whatsapp_config', JSON.stringify(whatsappConfig));
+            }
+            if(curTime === nightEndTime && whatsappConfig.lastSentKey !== triggerKeyNight) {
+                const msg = generateShiftReportText('NIGHT', todayStr);
+                executeWhatsAppApiCall(whatsappConfig.phone, whatsappConfig.apiKey, msg, true);
+                whatsappConfig.lastSentKey = triggerKeyNight;
+                localStorage.setItem('wk_whatsapp_config', JSON.stringify(whatsappConfig));
+            }
+        }, 60000);
+
+        function calculateLiveStock() {
+            let stock = {};
+            products.forEach(p => stock[p] = { Rolls: 0, Cutting: 0, Forming: 0, QC: 0, Packed: 0 });
+            jobs.forEach(j => {
+                if (stock[j.product]) {
+                    stock[j.product].Rolls += (j.availableRolls || 0);
+                    stock[j.product].Cutting += (j.availableCuttingCrates || 0);
+                    stock[j.product].Forming += (j.availableFormingCrates || 0);
+                    stock[j.product].QC += (j.availableQcCrates || 0);
+                }
+            });
+            packJobs.forEach(pj => {
+                if(pj.issuedCrates) {
+                    Object.keys(pj.issuedCrates).forEach(pName => {
+                        if(stock[pName]) stock[pName].Packed += (pj.issuedCrates[pName] || 0);
+                    });
+                }
+            });
+            return stock;
+        }
+
+        function getQcJobsForProduct(prodName) {
+            return jobs.filter(j => j.product === prodName && (j.availableQcCrates || 0) > 0);
+        }
+
+        function renderRoleDropdown() {
+            const rSelect = document.getElementById('userRoleSelect');
+            rSelect.innerHTML = '';
+            Object.keys(users).forEach(uKey => {
+                rSelect.innerHTML += `<option value="${uKey}">${uKey.toUpperCase()}</option>`;
+            });
+
+            const admResetSelect = document.getElementById('admResetUserSelect');
+            if(admResetSelect) {
+                admResetSelect.innerHTML = '';
+                Object.keys(users).forEach(uKey => {
+                    admResetSelect.innerHTML += `<option value="${uKey}">${uKey.toUpperCase()} [${(users[uKey].perms || []).join(', ')}]</option>`;
+                });
+            }
+            clearPasswordBox();
+        }
+
+        function clearPasswordBox() {
+            document.getElementById('password').value = '';
+            document.getElementById('loginError').classList.add('hidden');
+        }
+
+        function renderProductDropdowns() {
+            const pSelect = document.getElementById('newProductType');
+            pSelect.innerHTML = '';
+            products.forEach(p => pSelect.innerHTML += `<option value="${p}">${p}</option>`);
+
+            const editPSelect = document.getElementById('editProductType');
+            if(editPSelect) {
+                editPSelect.innerHTML = '';
+                products.forEach(p => editPSelect.innerHTML += `<option value="${p}">${p}</option>`);
+            }
+
+            const mktSingleSelect = document.getElementById('mktSingleItemSelect');
+            if(mktSingleSelect) {
+                mktSingleSelect.innerHTML = '';
+                products.forEach(p => mktSingleSelect.innerHTML += `<option value="${p}">${p}</option>`);
+            }
+
+            const admSingleSelect = document.getElementById('adminEditSingleItemSelect');
+            if(admSingleSelect) {
+                admSingleSelect.innerHTML = '';
+                products.forEach(p => admSingleSelect.innerHTML += `<option value="${p}">${p}</option>`);
+            }
+
+            const mReportSelect = document.getElementById('reportMachineSelect');
+            if(mReportSelect) {
+                mReportSelect.innerHTML = '<option value="ALL">-- ALL MACHINES REPORT --</option>';
+                Object.keys(machines).forEach(stage => {
+                    machines[stage].forEach(m => {
+                        mReportSelect.innerHTML += `<option value="${m}">${m} (${stage})</option>`;
+                    });
+                });
+            }
+            renderDepartmentDatalists();
+        }
+
+        function renderDepartmentDatalists() {
+            const sDl = document.getElementById('slitWorkerDatalist');
+            if(sDl) { sDl.innerHTML = ''; (deptWorkers['Slitting'] || []).forEach(w => sDl.innerHTML += `<option value="${w}">`); }
+            const pDl = document.getElementById('packWorkerDatalist');
+            if(pDl) { pDl.innerHTML = ''; (deptWorkers['Packing'] || []).forEach(w => pDl.innerHTML += `<option value="${w}">`); }
+            const bDl = document.getElementById('paperBrandDatalist');
+            if(bDl) { bDl.innerHTML = ''; paperBrands.forEach(b => bDl.innerHTML += `<option value="${b}">`); }
+            updateProcessWorkerDatalist();
+        }
+
+        function updateProcessWorkerDatalist() {
+            const proc = document.getElementById('processSelect') ? document.getElementById('processSelect').value : 'Cutting';
+            const dynDl = document.getElementById('dynamicStageWorkerDatalist');
+            if(dynDl) { dynDl.innerHTML = ''; (deptWorkers[proc] || []).forEach(w => dynDl.innerHTML += `<option value="${w}">`); }
+        }
+
+        function login() {
+            const roleKey = document.getElementById('userRoleSelect').value;
+            const pass = document.getElementById('password').value.trim();
+
+            if(users[roleKey] && users[roleKey].pass === pass) {
+                let userObj = users[roleKey];
+                let perms = userObj.perms || (userObj.role === 'Admin' ? ['Admin', 'Marketing', 'Dispatch', 'Slitting', 'Cutting', 'Forming', 'QC', 'Packing'] : [userObj.role.replace(' User', '')]);
+                currentUser = { username: roleKey, pass: userObj.pass, perms: perms };
+
+                document.getElementById('loginSection').classList.add('hidden');
+                document.getElementById('appSection').classList.remove('hidden');
+                document.getElementById('userInfo').classList.remove('hidden');
+                document.getElementById('displayRole').innerText = `${currentUser.username.toUpperCase()}`;
+                setupPermissions();
+                initDashboardDates();
+                loadShiftConfigToUI();
+                autoSetDropdownToCurrentShift();
+                renderUI();
+            } else {
+                document.getElementById('loginError').classList.remove('hidden');
+            }
+        }
+
+        function logout() {
+            currentUser = null;
+            document.getElementById('loginSection').classList.remove('hidden');
+            document.getElementById('appSection').classList.add('hidden');
+            document.getElementById('userInfo').classList.add('hidden');
+            clearPasswordBox();
+        }
+
+        function openSelfPasswordModal() {
+            document.getElementById('selfOldPass').value = '';
+            document.getElementById('selfNewPass').value = '';
+            document.getElementById('selfPasswordModal').style.display = 'block';
+        }
+        function closeSelfPasswordModal() { document.getElementById('selfPasswordModal').style.display = 'none'; }
+
+        function saveSelfPasswordChange() {
+            const oldP = document.getElementById('selfOldPass').value.trim();
+            const newP = document.getElementById('selfNewPass').value.trim();
+            if(!oldP || !newP) return alert('Enter current and new password!');
+            if(currentUser.pass !== oldP) return alert('Current password does not match!');
+
+            users[currentUser.username].pass = newP;
+            currentUser.pass = newP;
+            localStorage.setItem('wk_users', JSON.stringify(users));
+            closeSelfPasswordModal();
+            alert('✅ Your private password updated successfully!');
+        }
+
+        function adminResetUserPassword() {
+            const targetUser = document.getElementById('admResetUserSelect').value;
+            const newP = document.getElementById('admNewPassInput').value.trim();
+            if(!targetUser || !newP) return alert('Select user and enter new password!');
+            if(users[targetUser]) {
+                users[targetUser].pass = newP;
+                localStorage.setItem('wk_users', JSON.stringify(users));
+                document.getElementById('admNewPassInput').value = '';
+                logs.push({
+                    jobId: 'USER-ADMIN', product: 'SECURITY', stage: 'Admin', machine: 'ADMIN',
+                    action: `Admin reset password for user: ${targetUser}`, user: currentUser.username,
+                    rawDate: new Date().toISOString().split('T')[0], timestamp: new Date().toLocaleString()
+                });
+                saveData();
+                alert(`✅ Password for User [${targetUser}] reset successfully!`);
+            }
+        }
+
+        function setupPermissions() {
+            document.getElementById('secSlitting').classList.add('hidden');
+            document.getElementById('secOperator').classList.add('hidden');
+            document.getElementById('secPackingDesk').classList.add('hidden');
+            document.getElementById('secMarketing').classList.add('hidden');
+            document.getElementById('secDispatch').classList.add('hidden');
+            document.getElementById('secAdminJobEdit').classList.add('hidden');
+            document.getElementById('secAdminSettings').classList.add('hidden');
+            document.getElementById('secReport').classList.add('hidden');
+
+            document.getElementById('dashSecAnalytics').classList.add('hidden');
+            document.getElementById('dashSecStockMatrix').classList.add('hidden');
+            document.getElementById('dashSecCustomerOrders').classList.add('hidden');
+            document.getElementById('dashSecWorkstations').classList.add('hidden');
+
+            if(!currentUser) return;
+            const perms = currentUser.perms || [];
+
+            if(perms.includes('Admin')) {
+                document.getElementById('secAdminJobEdit').classList.remove('hidden');
+                document.getElementById('secAdminSettings').classList.remove('hidden');
+                document.getElementById('secMarketing').classList.remove('hidden');
+                document.getElementById('secDispatch').classList.remove('hidden');
+                document.getElementById('secSlitting').classList.remove('hidden');
+                document.getElementById('secPackingDesk').classList.remove('hidden');
+                document.getElementById('secReport').classList.remove('hidden');
+
+                document.getElementById('dashSecAnalytics').classList.remove('hidden');
+                document.getElementById('dashSecStockMatrix').classList.remove('hidden');
+                document.getElementById('dashSecCustomerOrders').classList.remove('hidden');
+                document.getElementById('dashSecWorkstations').classList.remove('hidden');
+
+                loadAdminPackOrderList();
+                loadAdminJobList();
+                loadAdminBatchJobList();
+                loadReallocationDropdowns();
+                updatePendingPackDropdown();
+                updateDispatchCustomerDropdown();
+            }
+
+            if(perms.includes('Marketing')) {
+                document.getElementById('secMarketing').classList.remove('hidden');
+                document.getElementById('dashSecCustomerOrders').classList.remove('hidden');
+            }
+
+            if(perms.includes('Dispatch')) {
+                document.getElementById('secDispatch').classList.remove('hidden');
+                document.getElementById('dashSecCustomerOrders').classList.remove('hidden');
+                updateDispatchCustomerDropdown();
+            }
+
+            if(perms.includes('Slitting')) {
+                document.getElementById('secSlitting').classList.remove('hidden');
+                document.getElementById('secReport').classList.remove('hidden');
+                document.getElementById('dashSecStockMatrix').classList.remove('hidden');
+                document.getElementById('dashSecWorkstations').classList.remove('hidden');
+            }
+
+            if(perms.includes('Packing')) {
+                document.getElementById('secPackingDesk').classList.remove('hidden');
+                document.getElementById('secReport').classList.remove('hidden');
+                document.getElementById('dashSecCustomerOrders').classList.remove('hidden');
+                document.getElementById('dashSecStockMatrix').classList.remove('hidden');
+                updatePendingPackDropdown();
+            }
+
+            const opStages = perms.filter(p => ['Cutting', 'Forming', 'QC'].includes(p));
+            if(opStages.length > 0) {
+                document.getElementById('secOperator').classList.remove('hidden');
+                document.getElementById('secReport').classList.remove('hidden');
+                document.getElementById('dashSecStockMatrix').classList.remove('hidden');
+                document.getElementById('dashSecWorkstations').classList.remove('hidden');
+
+                const pSelect = document.getElementById('processSelect');
+                pSelect.innerHTML = '';
+                opStages.forEach(pr => pSelect.innerHTML += `<option value="${pr}">${pr}</option>`);
+                updateMachineList();
+                updateFilterProductDropdown();
+                updateProcessWorkerDatalist();
+            }
+            renderProductDropdowns();
+        }
+
+        function saveData() {
+            localStorage.setItem('wk_factory_jobs', JSON.stringify(jobs));
+            localStorage.setItem('wk_factory_logs', JSON.stringify(logs));
+            localStorage.setItem('wk_pack_jobs', JSON.stringify(packJobs));
+            localStorage.setItem('wk_dept_workers', JSON.stringify(deptWorkers));
+            localStorage.setItem('wk_paper_brands', JSON.stringify(paperBrands));
+            renderUI();
+        }
+
+        function initDashboardDates() {
+            const today = new Date();
+            const firstDay = new Date(today.getFullYear(), today.getMonth(), 1).toISOString().split('T')[0];
+            const currentDay = today.toISOString().split('T')[0];
+            const sInp = document.getElementById('dashStartDate');
+            const eInp = document.getElementById('dashEndDate');
+            if(sInp && !sInp.value) sInp.value = firstDay;
+            if(eInp && !eInp.value) eInp.value = currentDay;
+            const dispDate = document.getElementById('dispDate');
+            if(dispDate && !dispDate.value) dispDate.value = currentDay;
+        }
+
+        function updateDispatchCustomerDropdown() {
+            const cSelect = document.getElementById('dispCustomerSelect');
+            if(!cSelect) return;
+            cSelect.innerHTML = '<option value="">-- SELECT CUSTOMER / PARTY --</option>';
+            let readyCustomers = new Set();
+            packJobs.forEach(pj => {
+                let readyBoxes = (pj.packedBoxes || 0) - (pj.dispatchedBoxes || 0);
+                if(readyBoxes > 0) readyCustomers.add(pj.customer);
+            });
+            readyCustomers.forEach(cust => { cSelect.innerHTML += `<option value="${cust}">${cust}</option>`; });
+            loadCustomerReadyOrdersForDispatch();
+        }
+
+        function loadCustomerReadyOrdersForDispatch() {
+            const cust = document.getElementById('dispCustomerSelect').value;
+            const container = document.getElementById('dispMultiOrderContainer');
+            container.innerHTML = '';
+            if(!cust) return;
+            let matched = packJobs.filter(pj => pj.customer === cust && ((pj.packedBoxes || 0) - (pj.dispatchedBoxes || 0)) > 0);
+            if(matched.length === 0) { container.innerHTML = '<div style="color:#e53e3e; font-size:10px;">No ready warehouse stock for this customer.</div>'; return; }
+
+            container.innerHTML = `<span style="font-size:10px; font-weight:bold; color:#2b6cb0; display:block; margin-bottom:4px;">Ready Orders for ${cust}:</span>`;
+            matched.forEach(pj => {
+                let readyBoxes = (pj.packedBoxes || 0) - (pj.dispatchedBoxes || 0);
+                container.innerHTML += `
+                    <div style="background:#fff; border:1px solid #cbd5e0; padding:6px; border-radius:4px; margin-bottom:4px; font-size:10px;">
+                        <b>Order: ${pj.id}</b> | Item: <b style="color:#2f855a;">${pj.kitType}</b><br>
+                        Ready in WH: <b style="color:#2b6cb0;">${readyBoxes} Boxes</b> (${readyBoxes * pj.pcsPerBox} Pcs)<br>
+                        <div style="display:flex; align-items:center; gap:5px; margin-top:3px;">
+                            <label style="font-size:9px; font-weight:bold;">Dispatch Boxes:</label>
+                            <input type="number" class="multi-disp-box-input" data-orderid="${pj.id}" data-max="${readyBoxes}" data-item="${pj.kitType}" data-pcsbox="${pj.pcsPerBox}" value="${readyBoxes}" min="0" max="${readyBoxes}" style="width:80px; margin:0; padding:3px;">
+                        </div>
+                    </div>`;
+            });
+        }
+
+        function submitMultiItemDispatch() {
+            const cust = document.getElementById('dispCustomerSelect').value;
+            const invoiceNo = document.getElementById('dispInvoiceNo').value.trim().toUpperCase();
+            const gtNo = document.getElementById('dispGtNo').value.trim().toUpperCase();
+            const dispatchDate = document.getElementById('dispDate').value;
+            const inputs = document.querySelectorAll('.multi-disp-box-input');
+
+            if(!cust || !invoiceNo || !gtNo || inputs.length === 0) return alert('Please select Customer and enter Invoice No & GT/LR No!');
+
+            let dispatchedItems = [];
+            let totalBoxesDispatched = 0;
+
+            inputs.forEach(inp => {
+                let orderId = inp.getAttribute('data-orderid');
+                let max = parseInt(inp.getAttribute('data-max')) || 0;
+                let itemName = inp.getAttribute('data-item');
+                let pcsPerBox = parseInt(inp.getAttribute('data-pcsbox')) || 1000;
+                let sendQty = parseInt(inp.value) || 0;
+
+                if(sendQty > 0 && sendQty <= max) {
+                    let pj = packJobs.find(p => p.id === orderId);
+                    if(pj) {
+                        pj.dispatchedBoxes = (pj.dispatchedBoxes || 0) + sendQty;
+                        if(!pj.dispatchLogs) pj.dispatchLogs = [];
+                        pj.dispatchLogs.push({
+                            invoiceNo: invoiceNo, gtNo: gtNo, boxes: sendQty, pcs: sendQty * pcsPerBox,
+                            date: dispatchDate, time: new Date().toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'}), user: currentUser.username
+                        });
+                        if((pj.dispatchedBoxes * pj.pcsPerBox) >= pj.orderQty) pj.status = '100% Dispatched & Closed';
+                        else pj.status = 'Partially Dispatched';
+
+                        dispatchedItems.push({ orderId: orderId, item: itemName, boxes: sendQty, pcs: sendQty * pcsPerBox });
+                        totalBoxesDispatched += sendQty;
+
+                        logs.push({
+                            jobId: pj.id, product: pj.kitType, stage: 'Dispatch', machine: 'WAREHOUSE',
+                            action: `🚚 Dispatched ${sendQty} Boxes (${sendQty * pcsPerBox} Pcs) | Bill: ${invoiceNo} | GT: ${gtNo}`,
+                            user: currentUser.username, rawDate: dispatchDate, timestamp: new Date().toLocaleString()
+                        });
+                    }
+                }
+            });
+
+            if(dispatchedItems.length === 0) return alert('Enter at least 1 valid box count to dispatch!');
+            saveData();
+            openChallanModal(cust, invoiceNo, gtNo, dispatchDate, dispatchedItems, totalBoxesDispatched);
+            document.getElementById('dispInvoiceNo').value = '';
+            document.getElementById('dispGtNo').value = '';
+            updateDispatchCustomerDropdown();
+        }
+
+        function openChallanModal(cust, invoiceNo, gtNo, date, items, totalBoxes) {
+            const area = document.getElementById('challanPrintArea');
+            let rowsHtml = '';
+            items.forEach((it, idx) => {
+                rowsHtml += `<tr><td style="border:1px solid #000; padding:6px; text-align:center;">${idx+1}</td><td style="border:1px solid #000; padding:6px;"><b>${it.item}</b> (Order: ${it.orderId})</td><td style="border:1px solid #000; padding:6px; text-align:center; font-weight:bold;">${it.boxes} Boxes</td><td style="border:1px solid #000; padding:6px; text-align:center;">${it.pcs} Pcs</td></tr>`;
+            });
+            area.innerHTML = `
+                <div style="border:2px solid #1a365d; padding:15px; border-radius:6px; font-family:sans-serif;">
+                    <div style="display:flex; justify-content:space-between; align-items:center; border-bottom:2px solid #1a365d; padding-bottom:8px;">
+                        <div><h2 style="margin:0; color:#1a365d;">WÜNDERKRAF PAPERWARE</h2><p style="margin:0; font-size:11px;">Factory Gatepass & Delivery Challan</p></div>
+                        <div style="text-align:right; font-size:11px;"><b>Date:</b> ${date}<br><b>Invoice No:</b> ${invoiceNo}<br><b>GT / Vehicle No:</b> ${gtNo}</div>
+                    </div>
+                    <div style="margin:10px 0; background:#f4f6f9; padding:8px; border-radius:4px;"><b>Consignee / Customer Name:</b> <span style="font-size:14px; color:#1a365d; font-weight:bold;">${cust}</span></div>
+                    <table style="width:100%; border-collapse:collapse; margin-top:10px; font-size:11px;">
+                        <thead><tr style="background:#edf2f7;"><th style="border:1px solid #000; padding:6px;">Sr</th><th style="border:1px solid #000; padding:6px;">Product / Kit Description</th><th style="border:1px solid #000; padding:6px;">Dispatched Boxes</th><th style="border:1px solid #000; padding:6px;">Total Quantity</th></tr></thead>
+                        <tbody>${rowsHtml}</tbody>
+                        <tfoot><tr style="font-weight:bold; background:#edf2f7;"><td colspan="2" style="border:1px solid #000; padding:6px; text-align:right;">TOTAL LOADED:</td><td style="border:1px solid #000; padding:6px; text-align:center; font-size:12px;">${totalBoxes} Boxes</td><td style="border:1px solid #000; padding:6px;">-</td></tr></tfoot>
+                    </table>
+                    <div style="display:flex; justify-content:space-between; margin-top:40px; font-size:11px; padding-top:10px;">
+                        <div>_____________________<br><b>Prepared By (Dispatch)</b></div><div>_____________________<br><b>Driver / Transporter Sign</b></div><div>_____________________<br><b>Security Gate Out Sign</b></div>
+                    </div>
+                </div>`;
+            document.getElementById('challanModal').style.display = 'block';
+        }
+
+        function closeChallanModal() { document.getElementById('challanModal').style.display = 'none'; }
+
+        function openHoldModal(machineName) {
+            currentTargetHoldMachine = machineName;
+            document.getElementById('holdMachineNameInput').value = machineName;
+            document.getElementById('holdRemarksInput').value = '';
+            document.getElementById('holdBreakdownModal').style.display = 'block';
+        }
+        function closeHoldModal() { document.getElementById('holdBreakdownModal').style.display = 'none'; }
+
+        function confirmExecuteHold(sendWhatsApp) {
+            const reason = document.getElementById('holdReasonSelect').value;
+            const remarks = document.getElementById('holdRemarksInput').value.trim();
+            const machine = currentTargetHoldMachine;
+            const nowTime = new Date().toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
+            let fullReason = reason + (remarks ? ` (${remarks})` : '');
+            let targetJob = null, targetBatch = null;
+
+            if(machine === 'Slitting-1') {
+                const batchId = document.getElementById('runningSlitJobsSelect').value;
+                jobs.forEach(j => { let b = j.runningBatches.find(x => x.batchId === batchId && x.status === 'Running'); if(b) { targetJob = j; targetBatch = b; } });
+            } else if(machine === 'Packing-Kit Machine') {
+                const packId = document.getElementById('pendingPackOrderSelect').value;
+                let pj = packJobs.find(p => p.id === packId && p.status === 'Running');
+                if(pj) {
+                    pj.status = 'Held';
+                    logs.push({ jobId: pj.id, product: pj.kitType, stage: 'Packing', machine: machine, action: `⏸️ Machine HELD: ${fullReason}`, worker: pj.worker, user: currentUser.username, startTime: pj.startTime, endTime: nowTime, rawDate: new Date().toISOString().split('T')[0], timestamp: new Date().toLocaleString() });
+                }
+            } else {
+                const batchId = document.getElementById('runningJobsSelect').value;
+                jobs.forEach(j => { let b = j.runningBatches.find(x => x.batchId === batchId && x.status === 'Running'); if(b) { targetJob = j; targetBatch = b; } });
+            }
+
+            if(targetBatch) {
+                targetBatch.status = 'Held'; targetBatch.endTime = nowTime;
+                logs.push({ jobId: targetJob.id, product: targetJob.product, stage: targetBatch.stage, machine: machine, shift: targetBatch.shift, action: `⏸️ Machine HELD / BREAKDOWN: ${fullReason}`, worker: targetBatch.worker, user: currentUser.username, startTime: targetBatch.startTime, endTime: nowTime, rawDate: new Date().toISOString().split('T')[0], timestamp: new Date().toLocaleString() });
+            }
+
+            saveData(); closeHoldModal();
+            if(sendWhatsApp) {
+                let text = `🚨 *MACHINE BREAKDOWN / HOLD ALERT*\n\n🏢 *Factory:* Wünderkraf Paperware\n⚙️ *Machine:* ${machine}\n⚠️ *Reason:* ${fullReason}\n👤 *Reported By:* ${currentUser.username.toUpperCase()}\n⏰ *Time:* ${nowTime}\n\n_Please attend maintenance immediately._`;
+                if(whatsappConfig.phone && whatsappConfig.apiKey) executeWhatsAppApiCall(whatsappConfig.phone, whatsappConfig.apiKey, text, false);
+                else window.open(`https://api.whatsapp.com/send?text=${encodeURIComponent(text)}`, '_blank');
+            } else { alert(`Machine [${machine}] placed on HOLD.`); }
+        }
+
+        function loadReallocationDropdowns() {
+            const sSelect = document.getElementById('reallocSourceOrderSelect');
+            const tSelect = document.getElementById('reallocTargetOrderSelect');
+            if(!sSelect || !tSelect) return;
+            sSelect.innerHTML = '<option value="">-- SELECT SOURCE (READY STOCK) --</option>';
+            tSelect.innerHTML = '<option value="">-- SELECT TARGET (NEEDS STOCK) --</option>';
+
+            packJobs.forEach(pj => {
+                let readyBoxes = Math.max(0, (pj.packedBoxes || 0) - (pj.dispatchedBoxes || 0));
+                if(readyBoxes > 0) sSelect.innerHTML += `<option value="${pj.id}">${pj.id} | ${pj.customer} (${pj.kitType}) [Ready: ${readyBoxes} Boxes]</option>`;
+                tSelect.innerHTML += `<option value="${pj.id}">${pj.id} | ${pj.customer} (${pj.kitType})</option>`;
+            });
+        }
+
+        function adminExecuteStockReallocation() {
+            const sId = document.getElementById('reallocSourceOrderSelect').value;
+            const tId = document.getElementById('reallocTargetOrderSelect').value;
+            const moveBoxes = parseInt(document.getElementById('reallocBoxesQty').value) || 0;
+            if(!sId || !tId || moveBoxes <= 0) return alert('Select Source, Target and Enter valid Boxes Qty!');
+            if(sId === tId) return alert('Source and Target cannot be the same order!');
+
+            const src = packJobs.find(p => p.id === sId);
+            const tgt = packJobs.find(p => p.id === tId);
+            if(!src || !tgt) return alert('Orders not found!');
+
+            let srcReady = (src.packedBoxes || 0) - (src.dispatchedBoxes || 0);
+            if(moveBoxes > srcReady) return alert(`Source only has ${srcReady} ready boxes!`);
+            if(!confirm(`Confirm Emergency Stock Transfer?\nMove ${moveBoxes} Ready Boxes from [${src.customer}] to [${tgt.customer}]`)) return;
+
+            src.packedBoxes -= moveBoxes; tgt.packedBoxes = (tgt.packedBoxes || 0) + moveBoxes;
+            logs.push({ jobId: `${src.id} -> ${tgt.id}`, product: tgt.kitType, stage: 'Admin Re-Alloc', machine: 'ADMIN', action: `Emergency Transfer: ${moveBoxes} Ready Boxes moved from ${src.customer} (${src.id}) to ${tgt.customer} (${tgt.id})`, user: currentUser.username, rawDate: new Date().toISOString().split('T')[0], timestamp: new Date().toLocaleString() });
+            saveData(); loadReallocationDropdowns(); updateDispatchCustomerDropdown();
+            alert(`✅ Successfully Transferred ${moveBoxes} Boxes to ${tgt.customer}!`);
+            document.getElementById('reallocBoxesQty').value = '';
+        }
+
+        function renderDashboardAnalytics() {
+            if(!currentUser || !currentUser.perms.includes('Admin')) return;
+            const sDate = document.getElementById('dashStartDate').value;
+            const eDate = document.getElementById('dashEndDate').value;
+            const chartContainer = document.getElementById('dashBarGraphContainer');
+            const cardsContainer = document.getElementById('dashAnalyticsCards');
+
+            let totals = { 'Spoon': 0, 'Fork': 0, 'Knife': 0, 'Dessert Spoon': 0, 'Combos': 0 };
+            let totalBoxesDone = 0, totalDispatchedBoxes = 0, totalPaperKg = 0, totalRejectedCrates = 0;
+            let machineStats = {}, workerStats = {};
+
+            logs.forEach(l => {
+                if(!l.rawDate || (sDate && l.rawDate < sDate) || (eDate && l.rawDate > eDate)) return;
+                let m = l.machine || 'Unknown'; if(!machineStats[m]) machineStats[m] = { runs: 0, output: 0, minutes: 0 };
+                let w = l.worker || l.user || 'Unknown'; if(!workerStats[w]) workerStats[w] = { batches: 0, output: 0, minutes: 0 };
+
+                if(l.startTime && l.endTime && l.endTime !== 'RUNNING' && l.endTime !== 'HELD') {
+                    try {
+                        let s = new Date("1970/01/01 " + l.startTime);
+                        let e = new Date("1970/01/01 " + l.endTime);
+                        let diffMs = e - s; if(diffMs < 0) diffMs += 24 * 60 * 60 * 1000;
+                        let mins = Math.floor(diffMs / 60000);
+                        machineStats[m].minutes += mins; workerStats[w].minutes += mins;
+                    } catch(err) {}
+                }
+
+                if(l.action && (l.action.includes('Finished') || l.action.includes('Completed') || l.action.includes('Packed'))) {
+                    const match = l.action.match(/(\d+)\s*(Rolls|Crates|Boxes)/);
+                    if(match) {
+                        let qty = parseInt(match[1]) || 0;
+                        machineStats[m].runs += 1; machineStats[m].output += qty;
+                        workerStats[w].batches += 1; workerStats[w].output += qty;
+                        if(l.product && totals.hasOwnProperty(l.product)) totals[l.product] += qty;
+                        else if(l.stage === 'Packing') { totals['Combos'] += qty; totalBoxesDone += qty; }
+                    }
+                    const matchKg = l.action.match(/(\d+)\s*KG/); if(matchKg) totalPaperKg += parseInt(matchKg[1]) || 0;
+                    const matchRej = l.action.match(/Scrap:\s*(\d+)/); if(matchRej) totalRejectedCrates += parseInt(matchRej[1]) || 0;
+                }
+                if(l.action && l.action.includes('Dispatched')) {
+                    const matchDisp = l.action.match(/Dispatched\s*(\d+)\s*Boxes/);
+                    if(matchDisp) totalDispatchedBoxes += parseInt(matchDisp[1]) || 0;
+                }
+            });
+
+            cardsContainer.innerHTML = `
+                <div class="analytics-card" style="border-left:4px solid #0a4d2e;"><h5>🥄 SPOON</h5><div class="val" style="color:#0a4d2e;">${totals['Spoon']} Crates</div></div>
+                <div class="analytics-card" style="border-left:4px solid #145a32;"><h5>🍴 FORK</h5><div class="val" style="color:#145a32;">${totals['Fork']} Crates</div></div>
+                <div class="analytics-card" style="border-left:4px solid #a3894a;"><h5>🔪 KNIFE</h5><div class="val" style="color:#a3894a;">${totals['Knife']} Crates</div></div>
+                <div class="analytics-card" style="border-left:4px solid #2f855a;"><h5>📦 PACKED BOXES</h5><div class="val" style="color:#2f855a;">${totalBoxesDone} Boxes</div></div>
+                <div class="analytics-card" style="border-left:4px solid #dd6b20;"><h5>🚚 DISPATCHED</h5><div class="val" style="color:#dd6b20;">${totalDispatchedBoxes} Boxes</div></div>
+                <div class="analytics-card" style="border-left:4px solid #e53e3e;"><h5>🗑️ REJECTED SCRAP</h5><div class="val" style="color:#e53e3e;">${totalRejectedCrates} Crates</div></div>
+            `;
+
+            let maxVal = Math.max(totals['Spoon'], totals['Fork'], totals['Knife'], totals['Dessert Spoon'], totals['Combos'], 20);
+            chartContainer.innerHTML = `
+                <div style="font-size:10px; margin-bottom:2px;"><b>Spoon:</b> ${totals['Spoon']} Crates</div>
+                <div class="chart-bar-container"><div class="chart-bar-fill" style="width:${(totals['Spoon']/maxVal)*100}%; background:#0a4d2e;">${totals['Spoon']} Crates</div></div>
+                <div style="font-size:10px; margin-bottom:2px;"><b>Fork:</b> ${totals['Fork']} Crates</div>
+                <div class="chart-bar-container"><div class="chart-bar-fill" style="width:${(totals['Fork']/maxVal)*100}%; background:#145a32;">${totals['Fork']} Crates</div></div>
+                <div style="font-size:10px; margin-bottom:2px;"><b>Knife:</b> ${totals['Knife']} Crates</div>
+                <div class="chart-bar-container"><div class="chart-bar-fill" style="width:${(totals['Knife']/maxVal)*100}%; background:#a3894a;">${totals['Knife']} Crates</div></div>
+                <div style="font-size:10px; margin-bottom:2px;"><b>Packed Combo Boxes:</b> ${totalBoxesDone} Boxes</div>
+                <div class="chart-bar-container"><div class="chart-bar-fill" style="width:${(totalBoxesDone/maxVal)*100}%; background:#2f855a;">${totalBoxesDone} Boxes</div></div>
+            `;
+
+            const mBody = document.getElementById('dashMachineSummaryBody'); mBody.innerHTML = '';
+            Object.keys(machineStats).forEach(mk => {
+                let ms = machineStats[mk], hrs = (ms.minutes / 60).toFixed(1);
+                mBody.innerHTML += `<tr><td style="font-weight:bold;">${mk}</td><td>${ms.runs}</td><td style="color:#2b6cb0; font-weight:bold;">${ms.output} Units</td><td>${hrs} hrs</td></tr>`;
+            });
+            const wBody = document.getElementById('dashWorkerSummaryBody'); wBody.innerHTML = '';
+            Object.keys(workerStats).forEach(wk => {
+                let ws = workerStats[wk], hrs = (ws.minutes / 60).toFixed(1);
+                wBody.innerHTML += `<tr><td style="font-weight:bold;">${wk}</td><td>${ws.batches}</td><td style="color:#2f855a; font-weight:bold;">${ws.output} Units</td><td>${hrs} hrs</td></tr>`;
+            });
+        }
+
+        function toggleMktPackType() {
+            const type = document.getElementById('mktPackingType').value;
+            const kitSec = document.getElementById('mktKitSection');
+            const indSec = document.getElementById('mktIndividualSection');
+            if(type === 'INDIVIDUAL') { kitSec.classList.add('hidden'); indSec.classList.remove('hidden'); }
+            else { kitSec.classList.remove('hidden'); indSec.classList.add('hidden'); }
+            autoUpdateMktKitName();
+        }
+
+        function autoUpdateMktKitName() {
+            const type = document.getElementById('mktPackingType').value;
+            const badge = document.getElementById('mktKitBadge');
+            if(type === 'INDIVIDUAL') {
+                const single = document.getElementById('mktSingleItemSelect').value;
+                badge.innerText = `SINGLE ITEM: ONLY ${single.toUpperCase()}`;
+                badge.style.background = '#bee3f8'; badge.style.color = '#2b6cb0';
+            } else {
+                const selected = Array.from(document.querySelectorAll('.mkt-kit-item:checked')).map(cb => cb.value);
+                if(selected.length > 0) {
+                    badge.innerText = `${selected.length}-IN-1 KIT (${selected.join(' + ')})`;
+                    badge.style.background = '#c6f6d5'; badge.style.color = '#22543d';
+                } else {
+                    badge.innerText = 'NO ITEMS SELECTED';
+                    badge.style.background = '#edf2f7'; badge.style.color = '#718096';
+                }
+            }
+        }
+
+        function submitMarketingOrder() {
+            const cust = document.getElementById('mktCustName').value.trim();
+            const packType = document.getElementById('mktPackingType').value;
+            const orderQty = parseInt(document.getElementById('mktOrderQty').value) || 0;
+            const pcsPerBox = parseInt(document.getElementById('mktPcsPerBox').value) || 0;
+            const dispatch = document.getElementById('mktDispatchDate').value;
+            const wrapReq = document.getElementById('mktWrappingReq').value;
+            const labelReq = document.getElementById('mktLabelReq').value;
+            const remarks = document.getElementById('mktRemarks').value.trim();
+
+            let selectedItems = [], kitName = "";
+            if(packType === 'INDIVIDUAL') {
+                const single = document.getElementById('mktSingleItemSelect').value;
+                selectedItems = [single]; kitName = `Individual ${single} Box`;
+            } else {
+                selectedItems = Array.from(document.querySelectorAll('.mkt-kit-item:checked')).map(cb => cb.value);
+                kitName = `${selectedItems.length}-in-1 Kit (${selectedItems.join(', ')})`;
+            }
+
+            if(!cust || orderQty <= 0 || pcsPerBox <= 0 || selectedItems.length === 0) return alert('Please fill Customer Name, Order Quantity, Box Size & Select Pack Items!');
+
+            const packJobId = 'ORD-' + Math.floor(1000 + Math.random()*9000);
+            packJobs.push({
+                id: packJobId, customer: cust, packType: packType, orderQty: orderQty, pcsPerBox: pcsPerBox,
+                dispatchDate: dispatch, kitItems: selectedItems, kitType: kitName, status: 'Pending Queue',
+                packedBoxes: 0, dispatchedBoxes: 0, wrapping: wrapReq, labeling: labelReq, remarks: remarks || 'Standard Packing',
+                startTime: '', endTime: '', createdBy: currentUser.username, historyRuns: [], dispatchLogs: [], tracedJobs: []
+            });
+
+            logs.push({
+                jobId: packJobId, product: kitName, stage: 'Marketing', machine: 'MKT-ENTRY',
+                action: `Created Customer Order for ${cust} (${orderQty} Pcs)`, user: currentUser.username,
+                rawDate: new Date().toISOString().split('T')[0], timestamp: new Date().toLocaleString()
+            });
+
+            saveData();
+            alert(`Order [${packJobId}] Created for ${cust}! Added to Factory Packing Queue.`);
+            document.getElementById('mktCustName').value = ''; document.getElementById('mktOrderQty').value = '';
+            document.getElementById('mktPcsPerBox').value = ''; document.getElementById('mktRemarks').value = '';
+            document.querySelectorAll('.mkt-kit-item').forEach(cb => cb.checked = false);
+            autoUpdateMktKitName(); updatePendingPackDropdown(); updateDispatchCustomerDropdown();
+        }
+
+        function loadAdminPackOrderList() {
+            const select = document.getElementById('adminPackOrderSelect');
+            select.innerHTML = '<option value="">-- SELECT CUSTOMER ORDER TO EDIT --</option>';
+            packJobs.forEach(p => select.innerHTML += `<option value="${p.id}">${p.id} - ${p.customer} (${p.kitType})</option>`);
+        }
+
+        function toggleAdminEditPackType() {
+            const type = document.getElementById('editPackTypeSelect').value;
+            const kitSec = document.getElementById('adminEditKitSec');
+            const singleSec = document.getElementById('adminEditSingleSec');
+            if(type === 'INDIVIDUAL') { kitSec.classList.add('hidden'); singleSec.classList.remove('hidden'); }
+            else { kitSec.classList.remove('hidden'); singleSec.classList.add('hidden'); }
+        }
+
+        function loadPackOrderForAdminEdit() {
+            const id = document.getElementById('adminPackOrderSelect').value;
+            const panel = document.getElementById('adminOrderEditPanel');
+            if(!id) { panel.classList.add('hidden'); return; }
+            const pj = packJobs.find(p => p.id === id);
+            if(pj) {
+                panel.classList.remove('hidden');
+                document.getElementById('editOrderQtyInput').value = pj.orderQty;
+                document.getElementById('editBoxSizeInput').value = pj.pcsPerBox;
+                document.getElementById('editPackTypeSelect').value = pj.packType || 'KIT';
+                toggleAdminEditPackType();
+                if(pj.packType === 'INDIVIDUAL') { document.getElementById('adminEditSingleItemSelect').value = pj.kitItems[0] || 'Spoon'; }
+                else { document.querySelectorAll('.admin-edit-kit-item').forEach(cb => { cb.checked = pj.kitItems.includes(cb.value); }); }
+            }
+        }
+
+        function saveAdminOrderCorrection() {
+            const id = document.getElementById('adminPackOrderSelect').value;
+            const newQty = parseInt(document.getElementById('editOrderQtyInput').value) || 0;
+            const newBox = parseInt(document.getElementById('editBoxSizeInput').value) || 0;
+            const packType = document.getElementById('editPackTypeSelect').value;
+            const pj = packJobs.find(p => p.id === id);
+            if(!pj || newQty <= 0 || newBox <= 0) return alert('Enter valid Quantity and Box Size!');
+
+            let newItems = [], newKitName = "";
+            if(packType === 'INDIVIDUAL') {
+                const single = document.getElementById('adminEditSingleItemSelect').value;
+                newItems = [single]; newKitName = `Individual ${single} Box`;
+            } else {
+                newItems = Array.from(document.querySelectorAll('.admin-edit-kit-item:checked')).map(cb => cb.value);
+                if(newItems.length === 0) return alert('Select at least 1 Kit Item!');
+                newKitName = `${newItems.length}-in-1 Kit (${newItems.join(', ')})`;
+            }
+
+            pj.orderQty = newQty; pj.pcsPerBox = newBox; pj.packType = packType; pj.kitItems = newItems; pj.kitType = newKitName;
+            logs.push({
+                jobId: pj.id, product: newKitName, stage: 'Admin Correction', machine: 'ADMIN',
+                action: `Admin corrected Order Spec: ${newKitName}, Qty: ${newQty}, Pcs/Box: ${newBox}`,
+                user: currentUser.username, rawDate: new Date().toISOString().split('T')[0], timestamp: new Date().toLocaleString()
+            });
+            saveData(); loadAdminPackOrderList();
+            alert(`✅ Order ${id} Updated to: ${newKitName} (${newQty} Pcs)!`);
+        }
+
+        function loadAdminBatchJobList() {
+            const select = document.getElementById('adminBatchJobSelect');
+            select.innerHTML = '<option value="">-- SELECT JOB TO CORRECT BATCH --</option>';
+            jobs.forEach(j => select.innerHTML += `<option value="${j.id}">${j.id} - ${j.product}</option>`);
+        }
+
+        function loadBatchesForSelectedJob() {
+            const jobId = document.getElementById('adminBatchJobSelect').value;
+            const panel = document.getElementById('adminBatchEditPanel');
+            const batchSelect = document.getElementById('adminBatchSelect');
+            batchSelect.innerHTML = '<option value="">-- SELECT BATCH --</option>';
+            if(!jobId) { panel.classList.add('hidden'); return; }
+            const job = jobs.find(j => j.id === jobId);
+            if(job && job.runningBatches && job.runningBatches.length > 0) {
+                panel.classList.remove('hidden');
+                job.runningBatches.forEach(b => {
+                    batchSelect.innerHTML += `<option value="${b.batchId}">[${b.stage}] Batch ${b.batchId} on ${b.machine} (Output: ${b.producedQty || 0})</option>`;
+                });
+            } else { panel.classList.add('hidden'); alert('No completed/running batches found for this job.'); }
+        }
+
+        function loadBatchQtyForEdit() {
+            const jobId = document.getElementById('adminBatchJobSelect').value;
+            const batchId = document.getElementById('adminBatchSelect').value;
+            const job = jobs.find(j => j.id === jobId);
+            if(job) {
+                const b = job.runningBatches.find(x => x.batchId === batchId);
+                if(b) document.getElementById('editBatchOutputQtyInput').value = b.producedQty || 0;
+            }
+        }
+
+        function saveAdminBatchQtyCorrection() {
+            const jobId = document.getElementById('adminBatchJobSelect').value;
+            const batchId = document.getElementById('adminBatchSelect').value;
+            const newOutput = parseInt(document.getElementById('editBatchOutputQtyInput').value);
+            if(isNaN(newOutput) || newOutput < 0) return alert('Enter valid non-negative output quantity!');
+
+            const job = jobs.find(j => j.id === jobId);
+            if(!job) return alert('Job not found!');
+            const batch = job.runningBatches.find(b => b.batchId === batchId);
+            if(!batch) return alert('Batch not found!');
+
+            const oldOutput = batch.producedQty || 0;
+            const diff = newOutput - oldOutput;
+
+            if(batch.stage === 'Slitting') {
+                if(job.availableRolls + diff < 0) return alert(`Cannot reduce output! ${Math.abs(diff)} Rolls were already consumed in Cutting.`);
+                job.availableRolls += diff;
+            } else if(batch.stage === 'Cutting') {
+                if(job.availableCuttingCrates + diff < 0) return alert(`Cannot reduce output! ${Math.abs(diff)} Crates were already consumed in Forming.`);
+                job.availableCuttingCrates += diff;
+            } else if(batch.stage === 'Forming') {
+                if(job.availableFormingCrates + diff < 0) return alert(`Cannot reduce output! ${Math.abs(diff)} Crates were already consumed in QC.`);
+                job.availableFormingCrates += diff;
+            } else if(batch.stage === 'QC') {
+                if(job.availableQcCrates + diff < 0) return alert(`Cannot reduce output! ${Math.abs(diff)} Crates were already packed in Packing.`);
+                job.availableQcCrates += diff;
+            }
+
+            batch.producedQty = newOutput;
+            logs.push({
+                jobId: job.id, product: job.product, stage: batch.stage, machine: batch.machine,
+                action: `Admin corrected Output on Batch ${batch.batchId} from ${oldOutput} to ${newOutput} (${batch.stage==='Slitting'?'Rolls':'Crates'})`,
+                user: currentUser.username, rawDate: new Date().toISOString().split('T')[0], timestamp: new Date().toLocaleString()
+            });
+            saveData(); loadBatchesForSelectedJob();
+            alert(`✅ Batch ${batch.batchId} Output corrected to ${newOutput}. Stock Matrix adjusted!`);
+        }
+
+        function loadAdminJobList() {
+            const aSelect = document.getElementById('adminEditJobSelect');
+            aSelect.innerHTML = '<option value="">-- SELECT JOB TO EDIT --</option>';
+            jobs.forEach(j => aSelect.innerHTML += `<option value="${j.id}">${j.id} (${j.product})</option>`);
+        }
+
+        function loadJobForEdit() {
+            const jobId = document.getElementById('adminEditJobSelect').value;
+            const job = jobs.find(j => j.id === jobId);
+            if(job) {
+                document.getElementById('editJobNumber').value = job.id;
+                document.getElementById('editProductType').value = job.product;
+                document.getElementById('editPaperBrand').value = job.paperBrand || 'ITC';
+            }
+        }
+
+        function saveAdminJobCorrection() {
+            const oldJobId = document.getElementById('adminEditJobSelect').value;
+            const newJobId = document.getElementById('editJobNumber').value.trim().toUpperCase();
+            const newProd = document.getElementById('editProductType').value;
+            const newBrand = document.getElementById('editPaperBrand').value.trim().toUpperCase() || 'ITC';
+
+            if(!oldJobId || !newJobId) return alert('Select Job and enter valid details!');
+            let job = jobs.find(j => j.id === oldJobId);
+            if(job) {
+                job.id = newJobId; job.product = newProd; job.paperBrand = newBrand;
+                logs.forEach(l => { if(l.jobId === oldJobId) { l.jobId = newJobId; l.product = newProd; } });
+                logs.push({
+                    jobId: newJobId, product: newProd, stage: 'Admin', machine: 'ADMIN',
+                    action: `Admin corrected Job Meta from ${oldJobId} to ${newJobId} (Brand: ${newBrand})`, user: currentUser.username,
+                    rawDate: new Date().toISOString().split('T')[0], timestamp: new Date().toLocaleString()
+                });
+                saveData(); loadAdminJobList(); loadAdminBatchJobList();
+                alert(`Job Corrected to ${newJobId} (${newProd}) - Brand: ${newBrand}`);
+            }
+        }
+
+        function createSlittingJob() {
+            const input = document.getElementById('newJobId');
+            const product = document.getElementById('newProductType').value;
+            const paperBrand = document.getElementById('newPaperBrand').value.trim().toUpperCase() || 'ITC';
+            const worker = document.getElementById('slitWorkerName').value.trim().toUpperCase() || currentUser.username;
+            const shift = document.getElementById('slitShiftSelect').value;
+            const jobId = input.value.trim().toUpperCase();
+            if(!jobId) return alert('Enter Job Number!');
+
+            const exists = jobs.find(j => j.id === jobId) || packJobs.find(pj => pj.id === jobId);
+            if(exists) return alert(`Job Number [${jobId}] already exists!`);
+
+            let activeSlit = jobs.find(j => j.runningBatches && j.runningBatches.some(b => b.machine === 'Slitting-1' && b.status === 'Running'));
+            if(activeSlit) return alert(`Slitting Desk is RUNNING Job [${activeSlit.id}].`);
+
+            if(paperBrand && !paperBrands.includes(paperBrand)) paperBrands.push(paperBrand);
+            if(!deptWorkers['Slitting']) deptWorkers['Slitting'] = [];
+            if(worker && !deptWorkers['Slitting'].includes(worker)) deptWorkers['Slitting'].push(worker);
+            renderDepartmentDatalists();
+
+            const batchId = 'B-' + Math.floor(1000 + Math.random()*9000);
+            const nowTime = new Date().toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
+
+            jobs.push({
+                id: jobId, product: product, paperBrand: paperBrand, stage: 'Slitting',
+                availableRolls: 0, availableCuttingCrates: 0, availableFormingCrates: 0, availableQcCrates: 0,
+                runningBatches: [{ batchId: batchId, stage: 'Slitting', machine: 'Slitting-1', shift: shift, startTime: nowTime, endTime: '', status: 'Running', issuedQty: 1, producedQty: 0, worker: worker, user: currentUser.username }]
+            });
+
+            logs.push({
+                jobId: jobId, product: product, stage: 'Slitting', machine: 'Slitting-1', shift: shift,
+                action: `Slitting Started (Brand: ${paperBrand}) | Worker: ${worker}`, worker: worker, user: currentUser.username, startTime: nowTime, endTime: '', rawDate: new Date().toISOString().split('T')[0], timestamp: new Date().toLocaleString()
+            });
+
+            input.value = ''; saveData(); loadAdminBatchJobList();
+            alert(`Slitting Job ${jobId} Started (${shift} Shift).`);
+        }
+
+        function completeSlittingJob() {
+            const batchId = document.getElementById('runningSlitJobsSelect').value;
+            const outInput = document.getElementById('slitOutputRollCount').value;
+            const weightInput = parseInt(document.getElementById('slitOutputWeightKg').value) || 0;
+            if(!batchId || !outInput) return alert('Select Job & Enter Output Rolls!');
+
+            let targetJob = null, targetBatch = null;
+            jobs.forEach(j => {
+                let b = j.runningBatches.find(b => b.batchId === batchId && (b.status === 'Running' || b.status === 'Held'));
+                if(b) { targetJob = j; targetBatch = b; }
+            });
+
+            if(targetBatch) {
+                const outputRolls = parseInt(outInput) || 0;
+                const stopTime = new Date().toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
+                targetBatch.status = 'Completed'; targetBatch.endTime = stopTime;
+                targetBatch.producedQty = outputRolls; targetBatch.outputWeightKg = weightInput;
+                targetJob.stage = 'Slitting Completed'; targetJob.availableRolls += outputRolls;
+                targetJob.totalWeightKg = (targetJob.totalWeightKg || 0) + weightInput;
+
+                logs.push({
+                    jobId: targetJob.id, product: targetJob.product, stage: 'Slitting', machine: 'Slitting-1',
+                    shift: targetBatch.shift, action: `⏹ Slitting Finished (${outputRolls} Rolls, ${weightInput} KG) | Brand: ${targetJob.paperBrand || 'ITC'}`, worker: targetBatch.worker, user: currentUser.username, startTime: targetBatch.startTime, endTime: stopTime,
+                    rawDate: new Date().toISOString().split('T')[0], timestamp: new Date().toLocaleString()
+                });
+
+                document.getElementById('slitOutputRollCount').value = '';
+                document.getElementById('slitOutputWeightKg').value = '';
+                saveData();
+                alert(`Slitting Finished! ${outputRolls} Rolls (${weightInput} KG) added to stock.`);
+            }
+        }
+
+        function updateFilterProductDropdown() {
+            const fSelect = document.getElementById('filterProductSelect');
+            fSelect.innerHTML = '<option value="">-- ALL PRODUCTS --</option>';
+            products.forEach(p => fSelect.innerHTML += `<option value="${p}">${p}</option>`);
+            updatePendingDropdown();
+        }
+
+        function updatePendingDropdown() {
+            const proc = document.getElementById('processSelect').value;
+            const selectedProd = document.getElementById('filterProductSelect').value;
+            const pSelect = document.getElementById('pendingJobsSelect');
+            const lblInput = document.getElementById('lblInputQty');
+            pSelect.innerHTML = '<option value="">-- SELECT JOB QUEUE --</option>';
+
+            let pending = [];
+            if(proc === 'Cutting') { lblInput.innerText = 'Input Rolls to Issue (Enter Qty):'; pending = jobs.filter(j => j.availableRolls > 0); }
+            else if(proc === 'Forming') { lblInput.innerText = 'Input Crates to Issue (Enter Qty):'; pending = jobs.filter(j => j.availableCuttingCrates > 0); }
+            else if(proc === 'QC') { lblInput.innerText = 'Input Crates to QC Pass (Enter Qty):'; pending = jobs.filter(j => j.availableFormingCrates > 0); }
+
+            if(selectedProd) pending = pending.filter(j => j.product === selectedProd);
+            pending.forEach(j => pSelect.innerHTML += `<option value="${j.id}">${j.id} - ${j.product} [Paper: ${j.paperBrand || 'ITC'}]</option>`);
+            autoFillJobInfo();
+        }
+
+        function autoFillJobInfo() {
+            const jobId = document.getElementById('pendingJobsSelect').value;
+            const proc = document.getElementById('processSelect').value;
+            const noticeBox = document.getElementById('stockNoticeBox');
+            const issueInput = document.getElementById('issueQtyCount');
+            if(!jobId) { noticeBox.innerText = 'Select Job to View Stock Info'; issueInput.value = ''; return; }
+            const job = jobs.find(j => j.id === jobId);
+            if(job) {
+                let originText = `<br>Origin Paper Mill: <b style="color:#2f855a;">${job.paperBrand || 'ITC'}</b>`;
+                if(proc === 'Cutting') { noticeBox.innerHTML = `Stock Available: <b>${job.availableRolls} Rolls</b> [${job.product}] ${originText}`; issueInput.value = job.availableRolls; }
+                else if(proc === 'Forming') { noticeBox.innerHTML = `Stock Available: <b>${job.availableCuttingCrates} Cutting Crates</b> [${job.product}] ${originText}`; issueInput.value = job.availableCuttingCrates; }
+                else if(proc === 'QC') { noticeBox.innerHTML = `Stock Available: <b>${job.availableFormingCrates} Forming Crates</b> [${job.product}] ${originText}`; issueInput.value = job.availableFormingCrates; }
+            }
+        }
+
+        function acceptJob() {
+            const proc = document.getElementById('processSelect').value;
+            const machine = document.getElementById('machineSelect').value;
+            const shift = document.getElementById('shiftSelect').value;
+            const jobId = document.getElementById('pendingJobsSelect').value;
+            const reqQty = parseInt(document.getElementById('issueQtyCount').value);
+            const workerName = document.getElementById('operatorWorkerNameInput').value.trim().toUpperCase() || currentUser.username;
+
+            if(!jobId || isNaN(reqQty) || reqQty <= 0) return alert('Select Job & Enter valid Qty!');
+            if(!deptWorkers[proc]) deptWorkers[proc] = [];
+            if(workerName && !deptWorkers[proc].includes(workerName)) { deptWorkers[proc].push(workerName); renderDepartmentDatalists(); }
+
+            if(proc !== 'QC') {
+                let isMachineBusy = jobs.some(j => j.runningBatches && j.runningBatches.some(b => b.machine === machine && b.status === 'Running'));
+                if(isMachineBusy) return alert(`Machine [${machine}] is already RUNNING.`);
+            }
+
+            const job = jobs.find(j => j.id === jobId);
+            if(proc === 'Cutting') { if(reqQty > job.availableRolls) return alert(`Max available: ${job.availableRolls}`); job.availableRolls -= reqQty; }
+            else if(proc === 'Forming') { if(reqQty > job.availableCuttingCrates) return alert(`Max available: ${job.availableCuttingCrates}`); job.availableCuttingCrates -= reqQty; }
+            else if(proc === 'QC') { if(reqQty > job.availableFormingCrates) return alert(`Max available: ${job.availableFormingCrates}`); job.availableFormingCrates -= reqQty; }
+
+            const batchId = 'B-' + Math.floor(1000 + Math.random()*9000);
+            const nowTime = new Date().toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
+
+            job.runningBatches.push({
+                batchId: batchId, stage: proc, machine: machine, shift: shift, issuedQty: reqQty, producedQty: 0,
+                worker: workerName, user: currentUser.username, startTime: nowTime, endTime: '', status: 'Running'
+            });
+
+            logs.push({
+                jobId: job.id, product: job.product, stage: proc, machine: machine, shift: shift,
+                action: `Started Job (${reqQty} Qty Issued) | Worker: ${workerName}`, worker: workerName, user: currentUser.username, startTime: nowTime, endTime: '', rawDate: new Date().toISOString().split('T')[0], timestamp: new Date().toLocaleString()
+            });
+
+            document.getElementById('issueQtyCount').value = ''; saveData(); loadAdminBatchJobList();
+            alert(`Job Started on ${machine} (${shift} Shift)`);
+        }
+
+        function completeJob() {
+            const batchId = document.getElementById('runningJobsSelect').value;
+            const outInput = parseInt(document.getElementById('outputCrateCount').value) || 0;
+            const rejInput = parseInt(document.getElementById('rejectedCrateCount').value) || 0;
+            if(!batchId || outInput <= 0) return alert('Select Active Batch & Enter Passed Output Qty!');
+
+            let targetJob = null, targetBatch = null;
+            jobs.forEach(j => {
+                let b = j.runningBatches.find(b => b.batchId === batchId);
+                if(b) { targetJob = j; targetBatch = b; }
+            });
+
+            if(targetBatch) {
+                const stopTime = new Date().toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
+                targetBatch.status = 'Completed'; targetBatch.endTime = stopTime;
+                targetBatch.producedQty = (targetBatch.producedQty || 0) + outInput;
+                targetBatch.rejectedQty = rejInput;
+
+                if(targetBatch.stage === 'Cutting') targetJob.availableCuttingCrates += outInput;
+                else if(targetBatch.stage === 'Forming') targetJob.availableFormingCrates += outInput;
+                else if(targetBatch.stage === 'QC') targetJob.availableQcCrates += outInput;
+
+                let actionText = `⏹️ Job Completed (${outInput} Output Crates)`;
+                if(rejInput > 0) actionText += ` | Scrap: ${rejInput} Crates`;
+
+                logs.push({
+                    jobId: targetJob.id, product: targetJob.product, stage: targetBatch.stage, machine: targetBatch.machine,
+                    shift: targetBatch.shift, action: actionText, worker: targetBatch.worker, user: currentUser.username, startTime: targetBatch.startTime, endTime: stopTime,
+                    rawDate: new Date().toISOString().split('T')[0], timestamp: new Date().toLocaleString()
+                });
+
+                document.getElementById('outputCrateCount').value = ''; document.getElementById('rejectedCrateCount').value = '0';
+                saveData(); loadAdminBatchJobList();
+                alert(`Job Finished on ${targetBatch.machine}. (${outInput} Passed, ${rejInput} Scrap)`);
+            }
+        }
+
+        function updatePendingPackDropdown() {
+            const pSelect = document.getElementById('pendingPackOrderSelect');
+            if(!pSelect) return;
+            pSelect.innerHTML = '<option value="">-- SELECT PENDING PACKING ORDER --</option><option value="REGULAR_STOCK">-- REGULAR STOCK PRODUCTION --</option>';
+            packJobs.forEach(pj => {
+                let totalFinished = (pj.packedBoxes || 0) * (pj.pcsPerBox || 0);
+                let balance = (pj.orderQty || 0) - totalFinished;
+                if(pj.status !== 'Completed' || balance > 0) {
+                    pSelect.innerHTML += `<option value="${pj.id}">${pj.id} | ${pj.customer} | ${pj.kitType} [Pending Bal: ${balance > 0 ? balance : 0} Pcs]</option>`;
+                }
+            });
+        }
+
+        function loadPackJobDetails() {
+            const packId = document.getElementById('pendingPackOrderSelect').value;
+            const panel = document.getElementById('packOrderDetailsPanel');
+            const crateContainer = document.getElementById('crateInputsContainer');
+            crateContainer.innerHTML = '';
+            if(!packId) { panel.classList.add('hidden'); return; }
+            panel.classList.remove('hidden');
+
+            if(packId === 'REGULAR_STOCK') {
+                document.getElementById('lblCustName').innerText = 'Internal Stock Production';
+                document.getElementById('lblKitType').innerText = 'Standard Bulk Packaging';
+                document.getElementById('lblOrderQty').innerText = 'Open Run';
+                document.getElementById('lblPcsBox').innerText = '1000';
+                document.getElementById('lblTargetBoxes').innerText = 'N/A';
+                document.getElementById('lblBalanceQty').innerText = 'Open Stock';
+                document.getElementById('lblWrapVal').innerText = 'NO';
+                document.getElementById('lblLabelVal').innerText = 'Standard Internal';
+                document.getElementById('lblRemarkVal').innerText = 'Internal regular stock run';
+
+                products.forEach(prod => {
+                    let availJobs = getQcJobsForProduct(prod);
+                    let options = availJobs.map(j => `<option value="${j.id}">${j.id} (${j.availableQcCrates} Crates) [Paper: ${j.paperBrand || 'ITC'}]</option>`).join('');
+                    if(availJobs.length === 0) options = `<option value="">No Stock in QC</option>`;
+                    crateContainer.innerHTML += `<div style="display:grid; grid-template-columns:1fr 1.4fr 0.6fr; gap:4px; margin-top:4px; align-items:center;"><label style="font-size:9px;"><b>${prod}:</b></label><select class="pack-job-select" data-product="${prod}">${options}</select><input type="number" class="pack-crate-input" data-product="${prod}" value="0" min="0"></div>`;
+                });
+            } else {
+                const pj = packJobs.find(p => p.id === packId);
+                if(pj) {
+                    let totalFinished = (pj.packedBoxes || 0) * (pj.pcsPerBox || 0);
+                    let balancePcs = Math.max(0, pj.orderQty - totalFinished);
+                    let targetBoxes = Math.ceil(pj.orderQty / pj.pcsPerBox);
+
+                    document.getElementById('lblCustName').innerText = pj.customer;
+                    document.getElementById('lblKitType').innerText = pj.kitType;
+                    document.getElementById('lblOrderQty').innerText = pj.orderQty;
+                    document.getElementById('lblPcsBox').innerText = pj.pcsPerBox;
+                    document.getElementById('lblTargetBoxes').innerText = `${pj.packedBoxes || 0} / ${targetBoxes}`;
+                    document.getElementById('lblBalanceQty').innerText = balancePcs;
+                    document.getElementById('lblWrapVal').innerText = pj.wrapping || 'NO';
+                    document.getElementById('lblLabelVal').innerText = pj.labeling || 'NO';
+                    document.getElementById('lblRemarkVal').innerText = pj.remarks || 'None';
+
+                    pj.kitItems.forEach(item => {
+                        if(item === 'Tissue') {
+                            crateContainer.innerHTML += `<div style="display:grid; grid-template-columns:1fr 1.4fr 0.6fr; gap:4px; margin-top:4px; align-items:center;"><label style="font-size:9px;"><b>Tissue:</b></label><span style="font-size:9px; color:#718096;">Non-QC Item</span><input type="number" class="pack-crate-input" data-product="Tissue" value="1"></div>`;
+                        } else {
+                            let availJobs = getQcJobsForProduct(item);
+                            let options = availJobs.map(j => `<option value="${j.id}">${j.id} (${j.availableQcCrates} Crates) [Paper: ${j.paperBrand || 'ITC'}]</option>`).join('');
+                            if(availJobs.length === 0) options = `<option value="">No Stock in QC (0 Crates)</option>`;
+                            crateContainer.innerHTML += `<div style="display:grid; grid-template-columns:1fr 1.4fr 0.6fr; gap:4px; margin-top:4px; align-items:center;"><label style="font-size:9px;"><b>${item}:</b></label><select class="pack-job-select" data-product="${item}">${options}</select><input type="number" class="pack-crate-input" data-product="${item}" value="${availJobs.length > 0 ? 1 : 0}" min="0"></div>`;
+                        }
+                    });
+                }
+            }
+        }
+
+        function addMoreCratesToActiveRun() {
+            const packId = document.getElementById('pendingPackOrderSelect').value;
+            if(!packId) return alert('Select Packing Order first!');
+            let addedDetails = [];
+            let inputs = document.querySelectorAll('.pack-crate-input');
+
+            inputs.forEach(inp => {
+                let pName = inp.getAttribute('data-product');
+                let reqQty = parseInt(inp.value) || 0;
+                if(pName !== 'Tissue' && reqQty > 0) {
+                    let jobSelect = document.querySelector(`.pack-job-select[data-product="${pName}"]`);
+                    let selectedJobId = jobSelect ? jobSelect.value : null;
+                    if(selectedJobId) {
+                        let j = jobs.find(x => x.id === selectedJobId);
+                        if(j && j.availableQcCrates >= reqQty) {
+                            j.availableQcCrates -= reqQty;
+                            addedDetails.push(`${pName}: ${reqQty} Crates from ${selectedJobId} (${j.paperBrand || 'ITC'})`);
+                            let pj = packJobs.find(p => p.id === packId);
+                            if(pj) {
+                                if(!pj.tracedJobs) pj.tracedJobs = [];
+                                pj.tracedJobs.push({ jobId: selectedJobId, product: pName, paperBrand: j.paperBrand || 'ITC', crates: reqQty, time: new Date().toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'}), user: currentUser.username });
+                                if(!pj.issuedCrates) pj.issuedCrates = {};
+                                pj.issuedCrates[pName] = (pj.issuedCrates[pName] || 0) + reqQty;
+                            }
+                        } else { alert(`Error: Job ${selectedJobId} has only ${j ? j.availableQcCrates : 0} Crates!`); }
+                    }
+                }
+            });
+
+            if(addedDetails.length > 0) {
+                saveData(); loadPackJobDetails();
+                alert(`✅ Successfully added more crates to run:\n${addedDetails.join('\n')}`);
+            } else { alert('No valid crates selected to add.'); }
+        }
+
+        function startPackingJob() {
+            const packId = document.getElementById('pendingPackOrderSelect').value;
+            const shift = document.getElementById('packShiftSelect').value;
+            const worker = document.getElementById('packWorkerNameInput').value.trim().toUpperCase() || currentUser.username;
+            if(!packId) return alert('Select Packing Job!');
+            if(!deptWorkers['Packing']) deptWorkers['Packing'] = [];
+            if(worker && !deptWorkers['Packing'].includes(worker)) { deptWorkers['Packing'].push(worker); renderDepartmentDatalists(); }
+
+            const nowTime = new Date().toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
+            if(packId !== 'REGULAR_STOCK') {
+                let pj = packJobs.find(p => p.id === packId);
+                if(pj) { pj.status = 'Running'; if(!pj.startTime) pj.startTime = nowTime; pj.lastShift = shift; pj.worker = worker; }
+            } else {
+                const tempId = 'STOCK-' + Math.floor(1000 + Math.random()*9000);
+                packJobs.push({
+                    id: tempId, customer: 'Internal Stock', kitType: 'Standard Bulk Packaging',
+                    kitItems: products, status: 'Running', startTime: nowTime, shift: shift, pcsPerBox: 1000, orderQty: 0, packedBoxes: 0, dispatchedBoxes: 0, worker: worker, createdBy: currentUser.username, tracedJobs: []
+                });
+            }
+
+            logs.push({
+                jobId: packId, product: 'Packing Station', stage: 'Packing', machine: 'Packing-Kit Machine',
+                shift: shift, action: `Packing Run Started | Worker: ${worker}`, worker: worker, user: currentUser.username, startTime: nowTime, endTime: '', rawDate: new Date().toISOString().split('T')[0], timestamp: new Date().toLocaleString()
+            });
+            saveData(); alert(`Packing Station Active (Worker: ${worker})`);
+        }
+
+        function completePackingJob() {
+            const packId = document.getElementById('pendingPackOrderSelect').value;
+            const boxesDone = parseInt(document.getElementById('packedBoxesOutput').value) || 0;
+            const worker = document.getElementById('packWorkerNameInput').value.trim().toUpperCase() || currentUser.username;
+            if(boxesDone <= 0) return alert('Enter Valid Boxes Produced Output in this Run!');
+
+            let pj = packJobs.find(p => p.id === packId && (p.status === 'Running' || p.status === 'Held' || p.status === 'Pending Queue' || p.status.includes('In-Progress')));
+            const stopTime = new Date().toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
+            let inputs = document.querySelectorAll('.pack-crate-input');
+
+            if(pj) {
+                pj.packedBoxes = (pj.packedBoxes || 0) + boxesDone;
+                let totalFinishedPcs = pj.packedBoxes * pj.pcsPerBox;
+                if(!pj.historyRuns) pj.historyRuns = [];
+                pj.historyRuns.push({ boxes: boxesDone, pcs: boxesDone * pj.pcsPerBox, date: new Date().toISOString().split('T')[0], time: stopTime, worker: worker, user: currentUser.username });
+                pj.endTime = stopTime;
+                if(!pj.tracedJobs) pj.tracedJobs = [];
+                if(!pj.issuedCrates) pj.issuedCrates = {};
+
+                inputs.forEach(inp => {
+                    let pName = inp.getAttribute('data-product');
+                    let val = parseInt(inp.value) || 0;
+                    if(pName !== 'Tissue' && val > 0) {
+                        let jobSelect = document.querySelector(`.pack-job-select[data-product="${pName}"]`);
+                        let sJobId = jobSelect ? jobSelect.value : null;
+                        if(sJobId) {
+                            let j = jobs.find(x => x.id === sJobId);
+                            if(j && j.availableQcCrates >= val) {
+                                j.availableQcCrates -= val;
+                                pj.tracedJobs.push({ jobId: sJobId, product: pName, paperBrand: j.paperBrand || 'ITC', crates: val, time: stopTime, worker: worker, user: currentUser.username });
+                                pj.issuedCrates[pName] = (pj.issuedCrates[pName] || 0) + val;
+                            }
+                        }
+                    }
+                });
+
+                if(totalFinishedPcs >= pj.orderQty) {
+                    pj.status = 'Completed (Ready for Dispatch)';
+                    alert(`🎉 100% ORDER PACKED! Total ${pj.packedBoxes} Boxes ready for ${pj.customer}. Added to Ready Stock.`);
+                } else {
+                    let remainingPcs = pj.orderQty - totalFinishedPcs;
+                    pj.status = 'In-Progress (Partial)';
+                    alert(`✅ Run Saved! ${boxesDone} Boxes Added. Balance Remaining: ${remainingPcs} Pcs.`);
+                }
+
+                logs.push({
+                    jobId: pj.id, product: pj.kitType, stage: 'Packing', machine: 'Packing-Kit Machine',
+                    shift: pj.lastShift || 'DAY', action: `⏹ Packed ${boxesDone} Boxes (${boxesDone * pj.pcsPerBox} Pcs) | Worker: ${worker}`, worker: worker, user: currentUser.username, startTime: pj.startTime, endTime: stopTime,
+                    rawDate: new Date().toISOString().split('T')[0], timestamp: new Date().toLocaleString()
+                });
+            }
+
+            document.getElementById('packedBoxesOutput').value = '';
+            saveData(); loadPackJobDetails(); updateDispatchCustomerDropdown(); loadReallocationDropdowns();
+        }
+
+        function openOrderSpecModal(packId) {
+            const pj = packJobs.find(p => p.id === packId);
+            if(!pj) return;
+            const content = document.getElementById('orderSpecContent');
+            let totalPcsDone = (pj.packedBoxes || 0) * (pj.pcsPerBox || 0);
+            let dispatchedBoxes = pj.dispatchedBoxes || 0;
+            let readyBoxes = Math.max(0, (pj.packedBoxes || 0) - dispatchedBoxes);
+            let targetBoxes = Math.ceil((pj.orderQty || 0) / (pj.pcsPerBox || 1));
+
+            let runsHtml = "";
+            if(pj.historyRuns && pj.historyRuns.length > 0) {
+                runsHtml = `<div style="margin-top:6px; border-top:1px solid #cbd5e0; padding-top:4px;"><b>📋 Production Run Logs:</b><br>`;
+                pj.historyRuns.forEach((r, idx) => { runsHtml += `<span style="font-size:10px; color:#4a5568;">• Run ${idx+1}: <b>${r.boxes} Boxes</b> (${r.pcs} Pcs) on ${r.date} by Worker [${r.worker || r.user || 'N/A'}]</span><br>`; });
+                runsHtml += `</div>`;
+            }
+
+            let dispHtml = "";
+            if(pj.dispatchLogs && pj.dispatchLogs.length > 0) {
+                dispHtml = `<div style="margin-top:6px; border-top:1px solid #cbd5e0; padding-top:4px;"><b>🚚 Warehouse Dispatch & Invoicing Logs:</b><br>`;
+                pj.dispatchLogs.forEach(d => { dispHtml += `<span style="font-size:10px; color:#22543d;">• Dispatched: <b>${d.boxes} Boxes</b> (${d.pcs} Pcs) | Bill: <b style="color:#1a365d;">${d.invoiceNo}</b> | GT: <b>${d.gtNo}</b> on ${d.date} (${d.user})</span><br>`; });
+                dispHtml += `</div>`;
+            }
+
+            let traceHtml = "";
+            if(pj.tracedJobs && pj.tracedJobs.length > 0) {
+                traceHtml = `<div style="margin-top:6px; border-top:1px solid #cbd5e0; padding-top:4px;"><b>🔍 Material & Paper Mill Traceability:</b><br>`;
+                pj.tracedJobs.forEach(t => { traceHtml += `<span style="font-size:10px; color:#2b6cb0;">• ${t.product}: <b>${t.crates} Crates</b> from Job <b style="color:#1a365d;">${t.jobId}</b> (Paper Mill: <b style="color:#2f855a;">${t.paperBrand || 'ITC'}</b> | Worker: ${t.worker || 'N/A'})</span><br>`; });
+                traceHtml += `</div>`;
+            }
+
+            content.innerHTML = `
+                <div style="background:#edf2f7; padding:10px; border-radius:5px; margin-bottom:8px;">
+                    <b style="font-size:14px; color:#2b6cb0;">🏢 Customer / Brand: ${pj.customer}</b><br>
+                    <b>Order ID:</b> ${pj.id} | <b>Target Date:</b> <span style="color:#e53e3e; font-weight:bold;">${pj.dispatchDate || 'N/A'}</span><br>
+                    <b>Pack Type:</b> <span style="color:#2f855a; font-weight:bold;">${pj.kitType}</span> | <b>Created By:</b> <span style="font-weight:bold; color:#2b6cb0;">${pj.createdBy || 'N/A'}</span>
+                </div>
+                <div style="background:#fffaf0; padding:10px; border:1px solid #feebc8; border-radius:5px; margin-bottom:8px;">
+                    <b style="color:#dd6b20;">📦 Packaging & Order Targets:</b><br>
+                    • <b>Total Order Quantity:</b> ${pj.orderQty} Pieces (${targetBoxes} Boxes)<br>
+                    • <b>Capacity Per Box:</b> ${pj.pcsPerBox} Pieces/Box<br>
+                    • <b>Box Wrapping:</b> ${pj.wrapping || 'NO'} | <b>Label Required:</b> ${pj.labeling || 'NO'}<br>
+                    • <b>Special Instructions:</b> <i style="color:#2d3748;">${pj.remarks || 'None'}</i>
+                </div>
+                <div style="background:#f0fff4; padding:10px; border:1px solid #c6f6d5; border-radius:5px;">
+                    <b style="color:#2f855a;">📊 Live Production, Warehouse & Dispatch Status:</b><br>
+                    • <b>Total Produced / Packed:</b> <b style="color:#2b6cb0;">${pj.packedBoxes || 0} Boxes (${totalPcsDone} Pcs)</b><br>
+                    • <b>Total Dispatched:</b> <b style="color:#dd6b20;">${dispatchedBoxes} Boxes (${dispatchedBoxes * pj.pcsPerBox} Pcs)</b><br>
+                    • <b>Ready Stock in Warehouse:</b> <b style="color:#2f855a; font-size:13px;">${readyBoxes} Boxes (${readyBoxes * pj.pcsPerBox} Pcs)</b><br>
+                    • <b>Order Execution Status:</b> <span style="font-weight:bold; background:#e2e8f0; padding:2px 6px; border-radius:3px;">${pj.status}</span>
+                    ${runsHtml} ${dispHtml} ${traceHtml}
+                </div>`;
+            document.getElementById('orderSpecModal').style.display = 'block';
+        }
+
+        function closeOrderSpecModal() { document.getElementById('orderSpecModal').style.display = 'none'; }
+
+        function trackJob() {
+            const query = document.getElementById('searchJobId').value.trim().toUpperCase();
+            const res = document.getElementById('historyResult');
+            res.innerHTML = '';
+            if(!query) return alert('Enter Job No, Order No, Invoice No, Paper Brand or Customer Name!');
+
+            let matchedLogs = logs.filter(l => 
+                (l.jobId && l.jobId.toUpperCase().includes(query)) ||
+                (l.product && l.product.toUpperCase().includes(query)) ||
+                (l.action && l.action.toUpperCase().includes(query)) ||
+                (l.worker && l.worker.toUpperCase().includes(query)) ||
+                (l.user && l.user.toUpperCase().includes(query))
+            );
+
+            let matchedOrders = packJobs.filter(pj => 
+                pj.id.toUpperCase().includes(query) || 
+                pj.customer.toUpperCase().includes(query) ||
+                (pj.dispatchLogs && pj.dispatchLogs.some(d => d.invoiceNo.includes(query) || d.gtNo.includes(query)))
+            );
+
+            if(matchedLogs.length === 0 && matchedOrders.length === 0) {
+                res.innerHTML = '<div style="color:#e53e3e; font-size:11px; padding:5px;">No records found for search term!</div>';
+                return;
+            }
+
+            let html = '';
+            if(matchedOrders.length > 0) {
+                html += '<h4 style="margin:4px 0; font-size:11px; color:#2b6cb0;">📦 Matched Packing & Dispatch Orders:</h4>';
+                matchedOrders.forEach(pj => {
+                    let readyBoxes = Math.max(0, (pj.packedBoxes || 0) - (pj.dispatchedBoxes || 0));
+                    html += `<div style="background:#edf2f7; padding:6px; border-radius:4px; margin-bottom:5px; font-size:11px;"><b>Order: ${pj.id} - ${pj.customer}</b> (${pj.kitType})<br>Produced: <b>${pj.packedBoxes || 0} Boxes</b> | Dispatched: <b>${pj.dispatchedBoxes || 0} Boxes</b> | <b>WH Ready: ${readyBoxes} Boxes</b> | Status: <b>${pj.status}</b></div>`;
+                });
+            }
+
+            if(matchedLogs.length > 0) {
+                html += '<h4 style="margin:6px 0 4px 0; font-size:11px; color:#2b6cb0;">📋 Process Execution & Traceability Logs:</h4>';
+                html += `<table class="history-table"><thead><tr><th>Process / Machine</th><th>Action / Details</th><th>Worker / User</th><th>Start</th><th>End</th><th>Duration</th></tr></thead><tbody>`;
+                matchedLogs.forEach(l => {
+                    let duration = calculateTimeDifference(l.startTime, l.endTime);
+                    html += `<tr><td style="font-weight:bold;">${l.stage} (${l.machine})</td><td>${l.action}</td><td style="color:#2b6cb0; font-weight:bold;">${l.worker || l.user || 'N/A'}</td><td style="color:#2f855a; font-weight:bold;">${l.startTime || '--'}</td><td style="color:#e53e3e; font-weight:bold;">${l.endTime || 'RUNNING'}</td><td style="font-weight:bold; color:#2b6cb0;">${duration}</td></tr>`;
+                });
+                html += `</tbody></table>`;
+            }
+            res.innerHTML = html;
+        }
+
+        function exportToExcel() {
+            const sDate = document.getElementById('reportStartDate').value;
+            const eDate = document.getElementById('reportEndDate').value;
+            const selectedMachine = document.getElementById('reportMachineSelect').value;
+
+            let filteredLogs = logs;
+            if(selectedMachine !== 'ALL') filteredLogs = filteredLogs.filter(l => l.machine === selectedMachine);
+            if(sDate && eDate) filteredLogs = filteredLogs.filter(l => l.rawDate >= sDate && l.rawDate <= eDate);
+            if(filteredLogs.length === 0) return alert('No Machine Performance Logs Found!');
+
+            let summary = {}, workerSummary = {};
+            filteredLogs.forEach(l => {
+                let m = l.machine || 'Unknown'; if(!summary[m]) summary[m] = { jobs: new Set(), totalOutput: 0, totalMinutes: 0 };
+                let w = l.worker || l.user || 'Unknown'; if(!workerSummary[w]) workerSummary[w] = { batches: 0, totalOutput: 0, totalMinutes: 0 };
+
+                if(l.jobId) summary[m].jobs.add(l.jobId);
+                const match = l.action.match(/(\d+)\s*(Rolls|Crates|Boxes)/);
+                if(match) { let q = parseInt(match[1]) || 0; summary[m].totalOutput += q; workerSummary[w].totalOutput += q; workerSummary[w].batches += 1; }
+                if(l.startTime && l.endTime && l.endTime !== 'RUNNING' && l.endTime !== 'HELD') {
+                    try {
+                        let s = new Date("1970/01/01 " + l.startTime), e = new Date("1970/01/01 " + l.endTime);
+                        let diffMs = e - s; if(diffMs < 0) diffMs += 24 * 60 * 60 * 1000;
+                        let mins = Math.floor(diffMs / 60000);
+                        summary[m].totalMinutes += mins; workerSummary[w].totalMinutes += mins;
+                    } catch(err) {}
+                }
+            });
+
+            let csvContent = "data:text/csv;charset=utf-8,--- MACHINE MONTHLY PERFORMANCE SUMMARY ---\n";
+            csvContent += "Machine Name,Total Jobs Count,Total Units Produced,Total Operating Hours,Avg Units Per Hour\n";
+            Object.keys(summary).forEach(m => {
+                let s = summary[m], hrs = (s.totalMinutes / 60).toFixed(2), rate = hrs > 0 ? (s.totalOutput / hrs).toFixed(1) : s.totalOutput;
+                csvContent += `"${m}","${s.jobs.size}","${s.totalOutput}","${hrs} hrs","${rate} / hr"\n`;
+            });
+
+            csvContent += "\n--- WORKER / OPERATOR PERFORMANCE RANKING ---\n";
+            csvContent += "Worker Name,Total Batches Worked,Total Units Produced,Logged Operating Hours\n";
+            Object.keys(workerSummary).forEach(w => {
+                let ws = workerSummary[w], hrs = (ws.totalMinutes / 60).toFixed(2);
+                csvContent += `"${w}","${ws.batches}","${ws.totalOutput}","${hrs} hrs"\n`;
+            });
+
+            csvContent += "\n--- DETAILED RUN-BY-RUN PRODUCTION, DISPATCH & TRACEABILITY LOGS ---\n";
+            csvContent += "Date,Machine Name,Job ID,Shift,Product/Kit Type,Process Stage,Action,Worker Name,Logged User,Start Time,End Time,Duration\n";
+            filteredLogs.forEach(l => {
+                let dur = calculateTimeDifference(l.startTime, l.endTime);
+                csvContent += `"${l.rawDate}","${l.machine}","${l.jobId}","${l.shift || 'DAY'}","${l.product}","${l.stage}","${l.action}","${l.worker || 'N/A'}","${l.user || 'N/A'}","${l.startTime}","${l.endTime}","${dur}"\n`;
+            });
+
+            const encodedUri = encodeURI(csvContent);
+            const link = document.createElement("a");
+            link.setAttribute("href", encodedUri);
+            link.setAttribute("download", `Master_Factory_Report_${selectedMachine}_${new Date().toISOString().split('T')[0]}.csv`);
+            document.body.appendChild(link); link.click(); document.body.removeChild(link);
+        }
+
+        function exportSpecificMachineReport() {
+            if(!currentActiveModalMachine) return alert('No Machine Selected!');
+            document.getElementById('reportMachineSelect').value = currentActiveModalMachine;
+            exportToExcel();
+        }
+
+        function renderUI() {
+            const liveStock = calculateLiveStock();
+            const tbody = document.getElementById('productSummaryBody');
+            tbody.innerHTML = '';
+
+            products.forEach(p => {
+                tbody.innerHTML += `
+                    <tr>
+                        <td style="font-weight:bold;">${p}</td>
+                        <td class="clickable-cell" style="background:#e2e8f0;" onclick="openStockModal('${p}', 'Rolls')">${liveStock[p].Rolls} Rolls</td>
+                        <td class="clickable-cell" style="background:#ebf8ff;" onclick="openStockModal('${p}', 'Cutting')">${liveStock[p].Cutting} Crates</td>
+                        <td class="clickable-cell" style="background:#feebc8;" onclick="openStockModal('${p}', 'Forming')">${liveStock[p].Forming} Crates</td>
+                        <td class="clickable-cell" style="background:#e9d8fd;" onclick="openStockModal('${p}', 'QC')">${liveStock[p].QC} Crates</td>
+                        <td class="clickable-cell" style="background:#c6f6d5;" onclick="openStockModal('${p}', 'Packed')">${liveStock[p].Packed} Crates</td>
+                    </tr>`;
+            });
+
+            const kitBody = document.getElementById('kitStockSummaryBody');
+            kitBody.innerHTML = '';
+            if(packJobs.length === 0) { kitBody.innerHTML = `<tr><td colspan="7" style="color:#718096;">No Customer Kit Orders Created Yet</td></tr>`; }
+            else {
+                packJobs.forEach(pj => {
+                    let totalPackedBoxes = pj.packedBoxes || 0, dispatchedBoxes = pj.dispatchedBoxes || 0;
+                    let readyWarehouseBoxes = Math.max(0, totalPackedBoxes - dispatchedBoxes);
+                    kitBody.innerHTML += `<tr><td class="clickable-cell" onclick="openOrderSpecModal('${pj.id}')">🔍 <b>${pj.customer}</b></td><td>${pj.kitType}</td><td>${pj.orderQty} Pcs</td><td style="font-weight:bold; color:#2b6cb0;">${totalPackedBoxes} Boxes</td><td style="font-weight:bold; color:#dd6b20;">${dispatchedBoxes} Boxes</td><td style="font-weight:bold; color:#2f855a; font-size:12px;">${readyWarehouseBoxes} Boxes</td><td><span style="font-size:9px; background:#edf2f7; color:#2d3748; padding:2px 5px; border-radius:3px; font-weight:bold;">${pj.status}</span></td></tr>`;
+                });
+            }
+
+            const dash = document.getElementById('machineDashboard'); dash.innerHTML = '';
+            let allMachines = [...machines['Slitting'], ...machines['Cutting'], ...machines['Forming'], ...machines['QC'], ...machines['Packing']];
+
+            allMachines.forEach(m => {
+                let active = [];
+                if(m === 'Packing-Kit Machine') {
+                    packJobs.forEach(pj => { if(pj.status === 'Running' || pj.status === 'Held') active.push({ id: pj.id, product: pj.customer + ' (' + pj.kitType + ')', b: { status: pj.status, startTime: pj.startTime, issuedQty: 'Customer Pack', producedQty: pj.packedBoxes || 0, worker: pj.worker } }); });
+                } else {
+                    jobs.forEach(j => { j.runningBatches.forEach(b => { if(b.machine === m && (b.status === 'Running' || b.status === 'Held')) active.push({ id: j.id, product: j.product, paperBrand: j.paperBrand || 'ITC', b: b }); }); });
+                }
+
+                const isQC = (m === 'QC-Desk'), isPack = (m.includes('Packing'));
+                if(active.length > 0) {
+                    let jobRows = active.map(x => {
+                        let bal = (typeof x.b.issuedQty === 'number' && typeof x.b.producedQty === 'number') ? (x.b.issuedQty - x.b.producedQty) : '-';
+                        return `<div style="background:#f0f4f8; padding:5px; border-radius:4px; margin-top:3px; font-size:11px;"><b>📌 ${x.id}</b> (${x.product}) [${x.paperBrand || 'Paper'}]<br>Worker: <b style="color:#2b6cb0;">${x.b.worker || 'N/A'}</b> | Done: <b>${x.b.producedQty || 0}</b> | Bal: <b style="color:#dd6b20;">${bal}</b><br><span style="font-size:10px; color:${x.b.status === 'Running' ? '#2f855a' : '#dd6b20'};">Status: ${x.b.status} (${x.b.startTime})</span></div>`;
+                    }).join('');
+                    dash.innerHTML += `<div class="machine-card ${active[0].b.status === 'Held' ? 'held' : ''} ${isQC ? 'qc-card' : isPack ? 'pack-card' : ''}" onclick="openStationAnalytics('${m}')"><h4 style="margin:0; font-size:12px; color:#2b6cb0;">${m}</h4>${jobRows}</div>`;
+                } else {
+                    dash.innerHTML += `<div class="machine-card idle ${isQC ? 'qc-card' : isPack ? 'pack-card' : ''}" onclick="openStationAnalytics('${m}')"><h4 style="margin:0; font-size:12px; color:#718096;">${m}</h4><span style="font-size:10px; color:#a0aec0;">IDLE / READY</span></div>`;
+                }
+            });
+
+            updateRunningDropdown(); updatePendingPackDropdown(); updateDispatchCustomerDropdown();
+            loadReallocationDropdowns(); renderDashboardAnalytics(); applyBrandLogo();
+            if(currentUser && currentUser.perms && currentUser.perms.includes('Admin')) {
+                loadAdminPackOrderList(); loadAdminJobList(); loadAdminBatchJobList();
+            }
+        }
+
+        function updateMachineList() {
+            const proc = document.getElementById('processSelect').value;
+            const mSelect = document.getElementById('machineSelect');
+            mSelect.innerHTML = '';
+            if(proc && machines[proc]) machines[proc].forEach(m => mSelect.innerHTML += `<option value="${m}">${m}</option>`);
+            updateRunningDropdown(); updateProcessWorkerDatalist();
+        }
+
+        function updateRunningDropdown() {
+            const machine = document.getElementById('machineSelect').value;
+            const rSelect = document.getElementById('runningJobsSelect');
+            rSelect.innerHTML = '<option value="">-- SELECT ACTIVE RUNNING BATCH --</option>';
+
+            jobs.forEach(j => {
+                j.runningBatches.forEach(b => {
+                    if(b.machine === machine && (b.status === 'Running' || b.status === 'Held')) {
+                        rSelect.innerHTML += `<option value="${b.batchId}">${j.id} [${j.product}] - Worker: ${b.worker || 'N/A'}</option>`;
+                    }
+                });
+            });
+
+            const slitSelect = document.getElementById('runningSlitJobsSelect');
+            if(slitSelect) {
+                slitSelect.innerHTML = '<option value="">-- SELECT ACTIVE SLITTING JOB --</option>';
+                jobs.forEach(j => {
+                    j.runningBatches.forEach(b => {
+                        if(b.machine === 'Slitting-1' && (b.status === 'Running' || b.status === 'Held')) {
+                            slitSelect.innerHTML += `<option value="${b.batchId}">${j.id} [${j.product}] (Brand: ${j.paperBrand || 'ITC'})</option>`;
+                        }
+                    });
+                });
+            }
+            updateRunningJobDisplayInfo();
+        }
+
+        function updateRunningJobDisplayInfo() {
+            const batchId = document.getElementById('runningJobsSelect').value;
+            const displayBox = document.getElementById('activeJobStatusBox');
+            if(!batchId) { displayBox.innerHTML = "No Active Running Job Selected"; return; }
+            jobs.forEach(j => {
+                let b = j.runningBatches.find(b => b.batchId === batchId);
+                if(b) {
+                    let balance = (b.issuedQty || 0) - (b.producedQty || 0);
+                    displayBox.innerHTML = `<b>Job: ${j.id} (${j.product})</b> [Brand: ${j.paperBrand || 'ITC'}]<br>Worker: <b>${b.worker || 'N/A'}</b> | Status: <b>${b.status}</b> | Output: <b>${b.producedQty || 0}</b> | Bal: <b>${balance} Crates</b>`;
+                }
+            });
+        }
+
+        function openStockModal(product, stage) {
+            const modal = document.getElementById('stockDetailModal');
+            document.getElementById('modalTitle').innerText = `Breakdown: ${product} (${stage})`;
+            const body = document.getElementById('modalBody'); body.innerHTML = '';
+            let matchedJobs = jobs.filter(j => j.product === product);
+            let html = `<table class="summary-table"><tr><th>Job ID</th><th>Paper Brand</th><th>Available Quantity</th></tr>`;
+            matchedJobs.forEach(j => {
+                let qty = 0;
+                if(stage === 'Rolls') qty = j.availableRolls;
+                else if(stage === 'Cutting') qty = j.availableCuttingCrates;
+                else if(stage === 'Forming') qty = j.availableFormingCrates;
+                else if(stage === 'QC') qty = j.availableQcCrates;
+                if(qty > 0) html += `<tr><td><b>${j.id}</b></td><td style="color:#2b6cb0; font-weight:bold;">${j.paperBrand || 'ITC'}</td><td style="color:#2f855a; font-weight:bold;">${qty}</td></tr>`;
+            });
+            html += `</table>`; body.innerHTML = html; modal.style.display = 'block';
+        }
+        function closeStockModal() { document.getElementById('stockDetailModal').style.display = 'none'; }
+
+        function openStationAnalytics(machineName) {
+            currentActiveModalMachine = machineName;
+            const modal = document.getElementById('stationDetailModal');
+            document.getElementById('stationModalTitle').innerText = `⚙️ Workstation Analytics: ${machineName}`;
+            const tableBody = document.getElementById('stationConsolidatedHistoryBody');
+            const chartBars = document.getElementById('stationChartBars');
+            tableBody.innerHTML = ''; chartBars.innerHTML = '';
+            let runs = [];
+
+            if(machineName === 'Packing-Kit Machine') {
+                packJobs.forEach(pj => {
+                    if(pj.historyRuns && pj.historyRuns.length > 0) {
+                        pj.historyRuns.forEach((r, idx) => {
+                            runs.push({ id: `${pj.id} (Run ${idx+1})`, item: `${pj.customer} (${pj.kitType})`, worker: r.worker || pj.worker || r.user || 'N/A', output: `${r.boxes} Boxes (${r.pcs} Pcs)`, start: pj.startTime || '--', end: r.time || pj.endTime || '--', dur: calculateTimeDifference(pj.startTime, r.time), status: 'Completed' });
+                        });
+                    } else if(pj.status === 'Running' || pj.status === 'Held') {
+                        runs.push({ id: pj.id, item: `${pj.customer} (${pj.kitType})`, worker: pj.worker || 'N/A', output: `${pj.packedBoxes || 0} Boxes (In-Progress)`, start: pj.startTime || '--', end: '--', dur: 'Active', status: pj.status });
+                    }
+                });
+            } else {
+                jobs.forEach(j => {
+                    if(j.runningBatches) {
+                        j.runningBatches.forEach(b => {
+                            if(b.machine === machineName) {
+                                let dur = calculateTimeDifference(b.startTime, b.endTime);
+                                let unit = (b.stage === 'Slitting') ? 'Rolls' : 'Crates';
+                                let outText = `${b.producedQty || 0} ${unit}`;
+                                if(b.outputWeightKg) outText += ` (${b.outputWeightKg} KG)`;
+                                if(b.rejectedQty > 0) outText += ` [${b.rejectedQty} Scrap]`;
+                                runs.push({ id: `${j.id} [${b.batchId}]`, item: `${j.product} (${j.paperBrand || 'ITC'})`, worker: b.worker || b.user || 'N/A', output: outText, start: b.startTime || '--', end: b.endTime || (b.status === 'Running' ? '--' : b.endTime), dur: dur, status: b.status });
+                            }
+                        });
+                    }
+                });
+            }
+
+            if(runs.length === 0) {
+                tableBody.innerHTML = `<tr><td colspan="8" style="color:#e53e3e;">No operations recorded for ${machineName}.</td></tr>`;
+                chartBars.innerHTML = `<p style="color:#718096; font-size:10px; text-align:center;">No activity chart available.</p>`;
+            } else {
+                runs.slice().reverse().forEach(r => {
+                    tableBody.innerHTML += `<tr><td style="font-weight:bold; color:#1a365d;">${r.id}</td><td>${r.item}</td><td style="color:#2b6cb0; font-weight:bold;">${r.worker}</td><td style="color:#2f855a; font-weight:bold;">${r.output}</td><td style="color:#2f855a;">${r.start}</td><td style="color:#e53e3e;">${r.end}</td><td style="font-weight:bold;">${r.dur}</td><td><span style="font-size:9px; background:${r.status==='Completed'?'#c6f6d5':'#feebc8'}; color:${r.status==='Completed'?'#22543d':'#744210'}; padding:2px 5px; border-radius:3px; font-weight:bold;">${r.status}</span></td></tr>`;
+                });
+                chartBars.innerHTML = `<div style="font-size:10px; color:#2d3748; margin-bottom:2px;">Total Consolidated Runs: <b>${runs.length} Runs</b></div><div class="chart-bar-container"><div class="chart-bar-fill" style="width: ${Math.min(100, runs.length * 12)}%;">${runs.length} Production Runs Completed</div></div>`;
+            }
+            modal.style.display = 'block';
+        }
+        function closeStationModal() { document.getElementById('stationDetailModal').style.display = 'none'; }
+
+        function exportToCSV() {
+            let csvContent = "data:text/csv;charset=utf-8,JobID,Product,PaperBrand,AvailableRolls,CuttingCrates,FormingCrates,QcCrates\n";
+            jobs.forEach(j => { csvContent += `${j.id},${j.product},${j.paperBrand || 'ITC'},${j.availableRolls || 0},${j.availableCuttingCrates || 0},${j.availableFormingCrates || 0},${j.availableQcCrates || 0}\n`; });
+            const encodedUri = encodeURI(csvContent);
+            const link = document.createElement("a"); link.setAttribute("href", encodedUri); link.setAttribute("download", "wunderkraf_stock_backup.csv");
+            document.body.appendChild(link); link.click(); link.remove();
+        }
+
+        function downloadBackupJSON() {
+            const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify({ jobs, logs, packJobs, users, deptWorkers, paperBrands, shiftConfig, whatsappConfig }));
+            const dlAnchor = document.createElement('a'); dlAnchor.setAttribute("href", dataStr); dlAnchor.setAttribute("download", `Backup_FactoryData_${new Date().toISOString().split('T')[0]}.json`);
+            document.body.appendChild(dlAnchor); dlAnchor.click();
+        }
+
+        function restoreBackupJSON() {
+            const input = document.createElement('input'); input.type = 'file';
+            input.onchange = e => {
+                const file = e.target.files[0]; const reader = new FileReader();
+                reader.onload = event => {
+                    try {
+                        const parsed = JSON.parse(event.target.result);
+                        if(parsed.jobs && parsed.logs) {
+                            jobs = parsed.jobs; logs = parsed.logs; packJobs = parsed.packJobs || [];
+                            if(parsed.users) users = parsed.users;
+                            if(parsed.deptWorkers) deptWorkers = parsed.deptWorkers;
+                            if(parsed.paperBrands) paperBrands = parsed.paperBrands;
+                            if(parsed.shiftConfig) shiftConfig = parsed.shiftConfig;
+                            if(parsed.whatsappConfig) whatsappConfig = parsed.whatsappConfig;
+                            saveData(); alert('Data Restored Successfully!');
+                        }
+                    } catch(err) { alert('Invalid Backup File!'); }
+                };
+                reader.readAsText(file);
+            };
+            input.click();
+        }
+
+        function updateSystemCode() {
+            const code = document.getElementById('htmlCodeInput').value.trim();
+            if(!code) return alert('Paste the updated HTML code in the text box first!');
+            if(confirm('Deploy updated system code script? Page will reload with new code.')) { document.open(); document.write(code); document.close(); }
+        }
+
+        function adminAddUser() {
+            const key = document.getElementById('admUserKey').value.trim().toLowerCase();
+            const pass = document.getElementById('admUserPass').value.trim();
+            const selectedPerms = Array.from(document.querySelectorAll('.user-perm-cb:checked')).map(cb => cb.value);
+            if(!key || !pass) return alert('Enter Username and Password!');
+            if(selectedPerms.length === 0) return alert('Select at least 1 Department Permission!');
+
+            users[key] = { pass: pass, perms: selectedPerms };
+            localStorage.setItem('wk_users', JSON.stringify(users)); renderRoleDropdown();
+            logs.push({ jobId: 'USER-ADMIN', product: 'SECURITY', stage: 'Admin', machine: 'ADMIN', action: `Admin saved user [${key}] with Rights: ${selectedPerms.join(', ')}`, user: currentUser ? currentUser.username : 'admin', rawDate: new Date().toISOString().split('T')[0], timestamp: new Date().toLocaleString() });
+            saveData();
+            document.getElementById('admUserKey').value = ''; document.getElementById('admUserPass').value = '';
+            document.querySelectorAll('.user-perm-cb').forEach(cb => cb.checked = false);
+            alert(`✅ User [${key}] created/updated with permissions: ${selectedPerms.join(', ')}!`);
+        }
+
+        renderRoleDropdown(); applyBrandLogo();
+    </script>
+</body>
+</html>
